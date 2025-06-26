@@ -1,0 +1,349 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Create New Post - Zero</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+        #drop-area.drag-over {
+            border-color: #026181;
+            background-color: rgba(2,97,129,0.1);
+        }
+        .thumbnail {
+            scroll-snap-align: start;
+            cursor: grab; /* Changed back to grab for better UX */
+            transition: transform 0.1s ease-out; /* Smooth transition for dragging effect */
+        }
+        .thumbnail-container {
+            scroll-snap-type: x mandatory;
+        }
+        .thumbnail.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        .thumbnail.drag-over-target {
+            border: 2px dashed #026181;
+            background-color: rgba(2,97,129,0.1);
+            box-shadow: 0 0 5px rgba(2,97,129,0.5);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <section id="publish" class="container mx-auto px-4 py-6">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-[#026181] mb-6">Create New Post</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                        <div>
+                            <div
+                                id="drop-area"
+                                class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-6 transition"
+                            >
+                                <i
+                                    class="fas fa-cloud-upload-alt text-4xl text-[#026181] mb-4"
+                                ></i>
+                                <p class="text-lg font-medium mb-2">
+                                    Drag & Drop your images here
+                                </p>
+                                <p class="text-gray-500 mb-4">or</p>
+                                <input
+                                    type="file"
+                                    id="fileInput"
+                                    name="images"
+                                    class="hidden"
+                                    accept="image/*"
+                                    multiple
+                                />
+                                <button
+                                    type="button"
+                                    id="selectFilesBtn"
+                                    class="px-4 py-2 bg-[#026181] text-white rounded-md hover:bg-[#014d68] transition"
+                                >
+                                    Select Files
+                                </button>
+                            </div>
+
+                            <div
+                                id="thumbnail-container"
+                                class="flex overflow-x-auto space-x-2 mt-4 mb-6 thumbnail-container"
+                            ></div>
+
+                            <div class="mb-6">
+                                <label
+                                    for="caption"
+                                    class="block text-sm font-medium text-gray-700 mb-2"
+                                    >Caption</label
+                                >
+                                <textarea
+                                    id="caption"
+                                    name="caption"
+                                    rows="4"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#026181]"
+                                    placeholder="Write your caption here..."
+                                ></textarea>
+                                <div class="text-right text-sm text-gray-500 mt-1">
+                                    <span id="wordCount">0</span>/300
+                                </div>
+                            </div>
+
+                            <div class="mb-6">
+                                <label
+                                    for="category"
+                                    class="block text-sm font-medium text-gray-700 mb-2"
+                                    >Category (optional)</label
+                                >
+                                <select
+                                    id="category"
+                                    name="category"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#026181]"
+                                >
+                                    <option value="">No Category</option>
+                                    <option value="Art">Art</option>
+                                    <option value="Food">Food</option>
+                                    <option value="Travel">Travel</option>
+                                    <option value="Photography">Photography</option>
+                                    <option value="Design">Design</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-medium mb-4">Post Preview</h3>
+                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <div
+                                    id="post-preview"
+                                    class="p-4 text-center text-gray-500 min-h-[300px]"
+                                >
+                                    Your post preview will appear here
+                                </div>
+                            </div>
+                            <div class="mt-6 text-right">
+                                <button
+                                    type="submit"
+                                    id="publishBtn"
+                                    class="px-6 py-2 bg-[#026181] text-white rounded-md hover:bg-[#014d68] transition font-medium disabled:opacity-50"
+                                    disabled
+                                >
+                                    Publish
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const dropArea = document.getElementById("drop-area");
+            const fileInput = document.getElementById("fileInput");
+            const selectBtn = document.getElementById("selectFilesBtn");
+            const thumbs = document.getElementById("thumbnail-container");
+            const caption = document.getElementById("caption");
+            const wordCount = document.getElementById("wordCount");
+            const category = document.getElementById("category");
+            const preview = document.getElementById("post-preview");
+            const publishBtn = document.getElementById("publishBtn");
+            let files = [];
+
+            // Drag/Drop for File Upload on main drop area
+            ["dragenter", "dragover", "dragleave", "drop"].forEach(evt => {
+                dropArea.addEventListener(evt, e => {
+                    e.preventDefault(); e.stopPropagation();
+                });
+            });
+            ["dragenter", "dragover"].forEach(evt => {
+                dropArea.addEventListener(evt, () => dropArea.classList.add("drag-over"));
+            });
+            ["dragleave", "drop"].forEach(evt => {
+                dropArea.addEventListener(evt, () => dropArea.classList.remove("drag-over"));
+            });
+            dropArea.addEventListener("drop", e => handleFiles(e.dataTransfer.files));
+            selectBtn.addEventListener("click", () => fileInput.click());
+            fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+
+            // Handle Files and Update Thumbnails
+            function handleFiles(list) {
+                // Convert FileList to Array and filter out non-images or duplicates (optional, but good practice)
+                const newFiles = [...list].filter(file => file.type.startsWith('image/'));
+                files = files.concat(newFiles);
+                updateThumbnails();
+                updatePreview();
+                publishBtn.disabled = !files.length;
+            }
+
+            function updateThumbnails() {
+                thumbs.innerHTML = ""; // Clear existing thumbnails
+                files.forEach((f, i) => {
+                    const div = document.createElement("div");
+                    div.className = "thumbnail flex-shrink-0 w-20 h-20 relative mr-2";
+                    div.draggable = true; // Enable dragging
+                    // No need for dataset.index here as we'll find index dynamically
+
+                    const img = document.createElement("img");
+                    img.className = "w-full h-full object-cover rounded";
+                    const reader = new FileReader();
+                    reader.onload = e => (img.src = e.target.result);
+                    reader.readAsDataURL(f);
+
+                    const btn = document.createElement("button");
+                    btn.innerHTML = '<i class="fas fa-times"></i>';
+                    btn.className = "absolute -top-0 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center cursor-pointer";
+                    btn.addEventListener("click", (event) => {
+                        event.stopPropagation(); // Prevent dragstart if clicking delete button
+                        const clickedThumbnail = event.target.closest(".thumbnail");
+                        if (clickedThumbnail) {
+                            const currentThumbnailIndex = Array.from(thumbs.children).indexOf(clickedThumbnail);
+                            if (currentThumbnailIndex > -1) {
+                                files.splice(currentThumbnailIndex, 1); // Remove the file from the array
+                                updateThumbnails(); // Re-render thumbnails and re-attach events
+                                updatePreview();
+                                publishBtn.disabled = !files.length;
+                            }
+                        }
+                    });
+
+                    div.append(img, btn);
+                    thumbs.append(div);
+                });
+                addDragEvents(); // Re-attach drag events to new/updated thumbnails
+            }
+
+            // Drag and Drop Reordering Logic
+            let draggedItem = null; // Stores the actual DOM element being dragged
+
+            function addDragEvents() {
+                const thumbnails = thumbs.querySelectorAll(".thumbnail");
+                thumbnails.forEach(thumb => {
+                    thumb.addEventListener("dragstart", dragStart);
+                    thumb.addEventListener("dragover", dragOver);
+                    thumb.addEventListener("dragleave", dragLeave);
+                    thumb.addEventListener("drop", drop);
+                    thumb.addEventListener("dragend", dragEnd);
+                });
+            }
+
+            function dragStart(e) {
+                // Ensure we are dragging the thumbnail div, not a child element
+                draggedItem = e.target.closest(".thumbnail");
+                if (!draggedItem) return; // Should not happen if event listener is on thumbnail itself
+
+                e.dataTransfer.effectAllowed = "move";
+                // Optionally set data (not strictly needed for reordering within same parent)
+                e.dataTransfer.setData("text/html", ""); // Required for Firefox sometimes
+
+                // Add a class to the dragged item for visual feedback
+                draggedItem.classList.add("dragging");
+            }
+
+            function dragOver(e) {
+                e.preventDefault(); // Essential to allow a drop
+                e.dataTransfer.dropEffect = "move";
+
+                const dropTarget = e.target.closest(".thumbnail");
+                // Only apply drag-over-target if it's a different thumbnail
+                if (dropTarget && dropTarget !== draggedItem) {
+                    // Remove class from previously hovered thumbnails
+                    thumbs.querySelectorAll(".thumbnail.drag-over-target").forEach(t => t.classList.remove("drag-over-target"));
+                    dropTarget.classList.add("drag-over-target");
+                }
+            }
+
+            function dragLeave(e) {
+                // Remove visual feedback when leaving a thumbnail
+                e.target.closest(".thumbnail")?.classList.remove("drag-over-target");
+            }
+
+            function drop(e) {
+                e.preventDefault();
+
+                const dropTarget = e.target.closest(".thumbnail");
+                // Remove drag-over-target class from all thumbnails after drop attempt
+                thumbs.querySelectorAll(".thumbnail.drag-over-target").forEach(t => t.classList.remove("drag-over-target"));
+
+                if (dropTarget && draggedItem && draggedItem !== dropTarget) {
+                    const draggedIndex = Array.from(thumbs.children).indexOf(draggedItem);
+                    const dropIndex = Array.from(thumbs.children).indexOf(dropTarget);
+
+                    // Reorder the 'files' array based on the visual DOM order
+                    const draggedFile = files[draggedIndex];
+                    files.splice(draggedIndex, 1); // Remove from old position
+                    files.splice(dropIndex, 0, draggedFile); // Insert into new position
+
+                    // Directly reorder the DOM elements for a smoother visual effect
+                    if (draggedIndex < dropIndex) {
+                        thumbs.insertBefore(draggedItem, dropTarget.nextSibling);
+                    } else {
+                        thumbs.insertBefore(draggedItem, dropTarget);
+                    }
+
+                    // After DOM reordering, simply update the preview as the files array is reordered
+                    updatePreview();
+
+                    // No need to call updateThumbnails() here, as we've directly manipulated DOM and files array.
+                    // Calling it would re-render everything, potentially causing a flicker.
+                    // The dragEnd will handle removing the 'dragging' class.
+                }
+            }
+
+            function dragEnd(e) {
+                if (draggedItem) {
+                    draggedItem.classList.remove("dragging");
+                }
+                // Ensure all drag-over-target classes are removed
+                thumbs.querySelectorAll(".thumbnail.drag-over-target").forEach(thumb => {
+                    thumb.classList.remove("drag-over-target");
+                });
+                draggedItem = null; // Clear the dragged item reference
+            }
+
+            // Live Preview (only shows the first image)
+            function updatePreview() {
+                if (!files.length) {
+                    preview.innerHTML = "Your post preview will appear here";
+                    return;
+                }
+                const first = files[0];
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.innerHTML = `
+                        <div class="post-container flex flex-col lg:flex-row">
+                            <div class="image-section lg:w-1/2 h-64 overflow-hidden relative">
+                                <div class="blur-bg" style="background:url(${e.target.result});filter:blur(10px);opacity:0.7;"></div>
+                                <img src="${e.target.result}" class="w-full h-full object-contain" />
+                            </div>
+                            <div class="content-section lg:w-1/2 p-4">
+                                <p class="mb-4">${caption.value || '<span class="text-gray-400">Caption will appear here</span>'}</p>
+                                ${category.value
+                                    ? `<span class="inline-block bg-[#026181] text-white text-xs px-2 py-1 rounded">${category.value}</span>`
+                                    : ""
+                                }
+                            </div>
+                        </div>`;
+                };
+                reader.readAsDataURL(first);
+            }
+
+            // Word Count for Caption
+            caption.addEventListener("input", () => {
+                const len = caption.value.length;
+                wordCount.textContent = len;
+                updatePreview(); // Update preview as caption changes
+            });
+            category.addEventListener("change", updatePreview); // Update preview if category changes
+        });
+    </script>
+</body>
+</html>

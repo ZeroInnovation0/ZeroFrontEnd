@@ -6,12 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zero</title>
     <link rel="stylesheet" href="{% static 'accounts/css/zeroSL.css'%}">
+    <link rel="icon" type="image/png" href="{% static 'images/Logo.png' %}">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
+    <div id="toast-container"></div>
     <div class="container">
         <div class="form-box login">
-            <form class="login-form" method="POST" action="{% url 'login' %}">
+            <form class="login-form" method="POST" action="{% url 'accounts:login' %}">
                 {% csrf_token %}
                 <a href="#" class="btn-shine">LOGIN</a>
                 <label id="label_email_login" for="email">Email Address</label>
@@ -24,7 +26,7 @@
                     {% if login_error %}<p id="login-error-text" class="error-text" style="color: red; font-size: 10px; margin: 0;">{{ login_error }}</p>{% endif %}
                 </div>
                 <div class="input-box">
-                    <input type="password" id="login-password" name="password" required>
+                    <input type="password" id="login-password" name="password" autocomplete="current-password" required>
                     <button type="button" id="login-toggle-btn">Show</button>
                 </div>
                 <div class="forgot-link">
@@ -38,7 +40,7 @@
                     <a href="#">Forgot Password?</a>
                 </div>
                 <button type="submit" class="btn">Login</button>
-                <a href="{% url 'social:begin' 'google-oauth2' %}?next=/" class="google-btn-link-login">
+                <a href="{% url 'social:begin' 'google-oauth2' %}?next=/home/" class="google-btn-link-login">
                 <button class="google-btn" type="button">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo">
                 Sign in with Google
@@ -48,30 +50,61 @@
         </div>
 
         <div class="form-box register">
-            <form class="register-form" method="POST" action="{% url 'register' %}">
+            <form class="register-form" method="POST" action="{% url 'accounts:register' %}">
                 {% csrf_token %}
+                <input type="hidden" name="user_type" value="{{ user_type|default:'explorer' }}">
                 <a href="#" class="btn-shine">Join ZERO</a>
-                <div style="display: flex; gap: 10px;">
-                    <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                        <div style="display: flex; gap: 10px; align-items: baseline;">
-                            <label id="label_firstname" for="first_name">First Name</label>
-                            {% if f_name_error %}<p id="login-error-text" class="error-text" style="color: red; font-size: 10px; margin: 0;">{{ f_name_error }}</p>{% endif %}
+
+                {# These error messages will now be handled by the JS toast system if their context variables are present #}
+                {% if google_login_hint %}
+                    {# The message will be picked up by the JS in `displayToastMessages()` #}
+                {% endif %}
+                {% if user_type_error %}
+                    {# The message will be picked up by the JS in `displayToastMessages()` #}
+                {% endif %}
+                {% if user_type_warning %}
+                    {# The message will be picked up by the JS in `displayToastMessages()` #}
+                {% endif %}
+                {% if login_success %}
+                    {# This message will also be picked up by the JS in `displayToastMessages()` #}
+                {% endif %}
+
+                <div style="display: flex; gap: 10px; width: 100%">
+                    {% if user_type == 'entrepreneur' %}
+                        <div style="display: flex; flex-direction: column; width: 100%;">
+                            <div style="display: flex; gap: 10px; align-items: baseline;">
+                                <label id="label_company" for="company_name" style="font-size: 13px">Company Name</label>
+                                {% if company_name_error %}<p id="company-error-text" class="error-text" style="color: red; font-size: 10px; margin: 0;">{{ company_name_error }}</p>{% endif %}
+                            </div>
+                            <div class="input-box">
+                                <input type="text" id="company_name" name="company_name" value="{{ company_name }}" style="width: 100%;" required>
+                                <i class='bx bxs-building'></i>
+                            </div>
                         </div>
-                        <div class="input-box">
-                            <input type="text" id="first_name" name="first_name" value="{{ first_name }}" required>
-                            <i class='bx bxs-user'></i>
+                    {% else %}
+                        <div style="display: flex; gap: 10px;">
+                            <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                                <div style="display: flex; gap: 10px; align-items: baseline;">
+                                    <label id="label_firstname" for="first_name" style="font-size: 13px">First Name</label>
+                                    {% if f_name_error %}<p id="login-error-text" class="error-text" style="color: red; font-size: 10px; margin: 0;">{{ f_name_error }}</p>{% endif %}
+                                </div>
+                                <div class="input-box">
+                                    <input type="text" id="first_name" name="first_name" value="{{ first_name }}" required>
+                                    {% comment %} <i class='bx bxs-user'></i> {% endcomment %}
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                                <div style="display: flex; gap: 10px; align-items: baseline;">
+                                    <label id="label_lastname" for="last_name">Last Name</label>
+                                    {% if l_name_error %}<p id="login-error-text" class="error-text" style="color: red; font-size: 10px; margin: 0;">{{ l_name_error }}</p>{% endif %}
+                                </div>
+                                <div class="input-box">
+                                    <input type="text" id="last_name" name="last_name" value="{{ last_name }}" required>
+                                    {% comment %} <i class='bx bxs-user'></i> {% endcomment %}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                        <div style="display: flex; gap: 10px; align-items: baseline;">
-                            <label id="label_lastname" for="last_name">Last Name</label>
-                            {% if l_name_error %}<p id="login-error-text" class="error-text" style="color: red; font-size: 10px; margin: 0;">{{ l_name_error }}</p>{% endif %}
-                        </div>
-                        <div class="input-box">
-                            <input type="text" id="last_name" name="last_name" value="{{ last_name }}" required>
-                            <i class='bx bxs-user'></i>
-                        </div>
-                    </div>
+                    {% endif %}
                 </div>
                 <div style="display: flex; gap: 10px; align-items: baseline;">
                     <label id="label_email_signup" for="email">Email Address</label>
@@ -99,7 +132,7 @@
                 </div>
                 <div class="signup-button-section">
                     <button type="submit" class="signup-btn">SignUp</button>
-                    <a href="{% url 'social:begin' 'google-oauth2' %}?next=/">
+                    <a href="{% url 'social:begin' 'google-oauth2' %}?next=/home/">
                     <button class="google-btn" type="button">
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo">
                         Sign in with Google
@@ -156,6 +189,51 @@
         const emailErrorElement = document.getElementById("email-error");
         const registerForm = document.querySelector(".register-form");
 
+
+        // --- NEW JAVASCRIPT FOR TOAST MESSAGES ---
+        const toastContainer = document.getElementById('toast-container');
+
+        function displayToast(message, type = 'info', duration = 3000) {
+            const toast = document.createElement('div');
+            toast.classList.add('toast-message', type);
+            toast.textContent = message;
+
+            toastContainer.appendChild(toast);
+
+            // Trigger reflow to ensure animation plays
+            void toast.offsetWidth;
+
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.classList.add('hide'); // Add hide class for fade-out animation
+
+                // Remove the toast from the DOM after the hide animation
+                toast.addEventListener('transitionend', () => {
+                    toast.remove();
+                }, { once: true });
+
+            }, duration);
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // Display messages from Django's messages framework as toasts
+            // These are the messages that are NOT tied to specific input fields
+            {% if google_login_hint %}
+                displayToast("{{ google_login_hint }}", "error", 5000); // Longer duration for important messages
+            {% endif %}
+            {% if user_type_error %}
+                displayToast("{{ user_type_error }}", "error");
+            {% endif %}
+            {% if user_type_warning %}
+                displayToast("{{ user_type_warning }}", "warning");
+            {% endif %}
+            {% if login_success %}
+                displayToast("{{ login_success }}", "success");
+            {% endif %}
+        });
+
         // If the backend told us to show the register panel, click the “SignUp” toggle on page load.
         {% if show_register %}
         document.addEventListener("DOMContentLoaded", function() {
@@ -175,8 +253,10 @@
           function clearPasswordFields() {
             const pwd = document.getElementById("signup-password");
             const cpwd = document.getElementById("signup-confirm-password");
+            const loginPwd = document.getElementById("login-password");
             if (pwd) pwd.value = "";
             if (cpwd) cpwd.value = "";
+            if (loginPwd) loginPwd.value = "";
         }
         
         document.addEventListener("DOMContentLoaded", clearPasswordFields);
@@ -191,8 +271,12 @@
 
         if (pwd.length < 8) {
             error = "*At least 8 characters required";
+        } else if (!/[A-Z]/.test(pwd)) {
+            error = "*At least one uppercase letter required";
+        } else if (!/[a-z]/.test(pwd)) {
+            error = "*At least one lowercase letter required";
         } else if (!/[0-9]/.test(pwd)) {
-            error = "*At least one number reuired";
+            error = "*At least one number required";
         } else if (!/[!@#$%^&*]/.test(pwd)) {
             error = "*At least one special character required";
         }
@@ -204,6 +288,11 @@
         } else {
             signupPasswordInput.style.border = "2px solid green";
             passwordErrorElement.style.display = "none";
+        }
+
+        // Trigger confirm password validation
+        if (confirmSignupPasswordInput.value) {
+            confirmSignupPasswordInput.dispatchEvent(new Event("input"));
         }
         });
 
@@ -255,27 +344,25 @@
         });        
 
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const registerForm = document.getElementById("registerForm");
-            const signupPasswordInput = document.getElementById("signupPassword");
-            const confirmSignupPasswordInput = document.getElementById("confirmSignupPassword");
-            const passwordErrorElement = document.getElementById("passwordError");
-            const confirmErrorElement = document.getElementById("confirmError");
-        
-            // Attach the submit handler
-            registerForm.addEventListener("submit", (e) => {
-                signupPasswordInput.dispatchEvent(new Event("input"));
-                confirmSignupPasswordInput.dispatchEvent(new Event("input"));
-        
-                if (
-                    passwordErrorElement.style.display === "block" ||
-                    confirmErrorElement.style.display === "block"
-                ) {
-                    e.preventDefault();
+        registerForm.addEventListener("submit", (e) => {
+            // Re-run both checks
+            signupPasswordInput.dispatchEvent(new Event("input"));
+            confirmSignupPasswordInput.dispatchEvent(new Event("input"));
+
+            // Check if there are any validation errors
+            if (
+                passwordErrorElement.style.display === "block" ||
+                confirmErrorElement.style.display === "block" ||
+                emailInput.value.trim() === "" // Additional check for empty email
+            ) {
+                e.preventDefault();
+                if (emailInput.value.trim() === "") {
+                    emailErrorElement.textContent = "*Email is required";
+                    emailErrorElement.style.display = "block";
+                    emailInput.style.border = "2px solid crimson";
                 }
-            });
+            }
         });
-        
 
 
         {% comment %} // 4) Prevent submission if live checks still show an error
@@ -300,15 +387,10 @@
 
         // Login form: Show/hide hands on focus and toggle
         loginPasswordInput.addEventListener("focus", () => {
-            if (loginPasswordInput.type === "password") {
-                wolfLeftHandLeft.style.transform = "translateY(0)";
-                wolfRightHandLeft.style.transform = "translateY(0)";
-            } else {
-                wolfLeftHandLeft.style.transform = "translateY(100%)";
-                wolfRightHandLeft.style.transform = "translateY(100%)";
-            }
+            wolfLeftHandLeft.style.transform = "translateY(0)";
+            wolfRightHandLeft.style.transform = loginPasswordInput.type === "text" ? "translateX(10%) translateY(0)" : "translateY(0)";
         });
-
+    
         loginToggleBtn.addEventListener("click", () => {
             if (loginPasswordInput.type === "password") {
                 loginPasswordInput.type = "text";
@@ -322,21 +404,16 @@
                 wolfRightHandLeft.style.transform = "translateY(0)";
             }
         });
-
+    
         wolfRightHandLeft.style.transform = "translateY(100%) translateX(10%)";
         
 
         // Signup form: Show/hide hands on focus and toggle
         signupPasswordInput.addEventListener("focus", () => {
-            if (signupPasswordInput.type === "password") {
-                wolfLeftHandRight.style.transform = "translateY(0)";
-                wolfRightHandRight.style.transform = "translateY(0)";
-            } else {
-                wolfLeftHandRight.style.transform = "translateY(100%)";
-                wolfRightHandRight.style.transform = "translateY(100%)";
-            }
+            wolfLeftHandRight.style.transform = "translateY(0)";
+            wolfRightHandRight.style.transform = signupPasswordInput.type === "text" ? "translateX(10%) translateY(0)" : "translateY(0)";
         });
-
+    
         signupToggleBtn.addEventListener("click", () => {
             if (signupPasswordInput.type === "password") {
                 signupPasswordInput.type = "text";
@@ -350,17 +427,12 @@
                 wolfRightHandRight.style.transform = "translateY(0)";
             }
         });
-
+    
         confirmSignupPasswordInput.addEventListener("focus", () => {
-            if (confirmSignupPasswordInput.type === "password") {
-                wolfLeftHandRight.style.transform = "translateY(0)";
-                wolfRightHandRight.style.transform = "translateY(0)";
-            } else {
-                wolfLeftHandRight.style.transform = "translateY(100%)";
-                wolfRightHandRight.style.transform = "translateY(100%)";
-            }
+            wolfLeftHandRight.style.transform = "translateY(0)";
+            wolfRightHandRight.style.transform = confirmSignupPasswordInput.type === "text" ? "translateX(10%) translateY(0)" : "translateY(0)";
         });
-
+    
         confirmSignupToggleBtn.addEventListener("click", () => {
             if (confirmSignupPasswordInput.type === "password") {
                 confirmSignupPasswordInput.type = "text";

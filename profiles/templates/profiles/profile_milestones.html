@@ -1,0 +1,61 @@
+{% extends 'profiles/base_profile.html' %}
+{% load static %}
+
+{% block title %}
+{{ profile.user.get_full_name }} - Milestones
+{% endblock %}
+
+{% block user_name %}
+{{ profile.user.first_name }}
+{% endblock %}
+
+{# ---- Hide these sections by overriding them as empty ---- #}
+{% block profile_card %}{% endblock %}
+{% block profile_header %}{% endblock %}
+{% block profile_content %}{% endblock %}
+{% block investor_contribution %}{% endblock %}
+{% block profile_video %}{% endblock %}
+{% block quick_facts %}{% endblock %}
+{% block milestones %}{% endblock %}
+
+
+{# ---- Now show only this section ---- #}
+{% block custom_milestone_section %}
+<section class="custom-milestones">
+  <div class="section-header">
+    <h2>All Experience</h2>
+  </div>
+  <div class="milestone-section">
+    <div class="milestone-content">
+      {% for experience in experiences %}
+        <div class="milestone-item">
+          <h4>{{ experience.title }}</h4>
+          <p>{{ experience.duration }}</p>
+          <p>{{ experience.description }}</p>
+          <hr>
+        </div>
+      {% empty %}
+        <p>No experience listed.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="section-header">
+    <h2>All Education</h2>
+  </div>
+  <div class="milestone-section">
+    <div class="milestone-content">
+      {% for education in educations %}
+        <div class="milestone-item">
+          <h4>{{ education.title }}</h4>
+          <p>{{ education.duration }}</p>
+          <p>{{ education.description }}</p>
+          <hr>
+        </div>
+      {% empty %}
+        <p>No education listed.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

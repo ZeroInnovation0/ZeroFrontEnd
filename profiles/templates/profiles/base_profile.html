@@ -1,0 +1,572 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Profile - Zero{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'profiles/css/profile.css' %}">
+</head>
+<body>
+  <div class="navbar-container">
+    <nav class="navbar">
+      <div class="user-section">
+        <div class="profile-icon" id="profile-picture">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="user-name">
+          <span>{% block user_name %}Name{% endblock %}</span>
+          <div class="dropdown">
+            <button class="dropdown-btn"><i class="fas fa-caret-down"></i></button>
+            <div class="dropdown-content">
+              <a href="#">Profiles</a>
+              <a href="#">Others</a>
+              <a href="{% url 'accounts:logout' %}">Sign Out</a>
+            </div>
+          </div>
+        </div>
+        <div class="vertical-line"></div>
+        <div class="logo">
+          <img src="{% static 'profiles/Images/Logo.png' %}" alt="Zero Logo" id="zero-logo">
+        </div>
+        <div class="vertical-line"></div>
+        <div class="nav-links">
+          <a href="#"><i class="fas fa-link"></i>Link-up</a>
+          <a href="#"><i class="fas fa-comment-dots"></i>Messages</a>
+          <a href="#"><i class="fas fa-bell"></i>Notifications</a>
+          <a href="#"><i class="fas fa-list"></i>Category</a>
+        </div>
+      </div>
+      <div class="right-section">
+        <div class="search-bar">
+          <input type="text" placeholder="Search">
+        </div>
+        <a href="{% url 'publish' %}"><button class="publish-btn"><svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1.25rem"
+      height="1.25rem"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+    >
+      <path d="M12 19v-7m0 0V5m0 7H5m7 0h7"></path>
+      </svg>Publish</button></a>
+      </div>
+    </nav>
+  </div>
+
+  {% block profile_card %}
+  <div class="profile-card-wrapper">
+    <aside class="profile-card">
+      <div class="card-content">
+        <img src="{% static 'profiles/Images/brian.avif' %}" alt="Profile Image" class="card-image">
+        <h2 class="card-name">{% block card_name %}Brian Griffin{% endblock %}</h2>
+        <p class="card-role"><span class="role-highlight">{% block card_role %}Explorer{% endblock %}</span> | {% block card_position %}Founder & CEO at Perter Corps{% endblock %}</p>
+        <p class="card-description">{% block card_description %}I look for passionate founders solving real problems with scalable solutions.{% endblock %}</p>
+        <button class="share-button">Share Profile</button>
+      </div>
+    </aside>
+  </div>
+  {% endblock %}
+
+  <main class="profile-main">
+    {% block custom_milestone_section %}{% endblock %}
+    {% block profile_header %}
+    <section class="profile-header">
+      <div class="profile-pic-wrapper">
+        <img src="{% static 'profiles/Images/brian.avif' %}" alt="Profile Picture" class="profile-pic">
+        {% comment %} <div class="profile-pic-edit">
+          <i class="fas fa-image"></i>
+        </div> {% endcomment %}
+      </div>
+      <h1 class="profile-name">{% block profile_name %}Brian Griffin{% endblock %}</h1>
+      <p class="profile-role"><span class="role-highlight">{% block profile_role %}Investor{% endblock %}</span> | {% block profile_position %}Founder & CEO at Perter Corps{% endblock %}</p>
+    </section>
+    {% endblock %}
+
+    <div class="content-wrapper">
+      {% block profile_content %}
+      <section class="profile-story">
+        <div class="section-header-with-edit">
+          <h2 class="section-title">My Story</h2>
+          {% comment %} <button class="edit-button" title="Edit your story">
+            <i class="fas fa-pen"></i>
+          </button> {% endcomment %}
+        </div>
+        <p class="profile-description">
+          {% block profile_description %}Born and raised in Kathmandu...{% endblock %}
+        </p>
+      </section>
+      {% endblock %}
+
+      {% block milestones %}
+      <section class="profile-grid">
+        <div class="milestones">
+          <div class="section-header">
+            <h2>Milestones & Journey</h2>
+            <a href="{% url 'profiles:profile_milestones' profile.slug %}" class="view-all">View All →</a>
+          </div>
+          <div class="milestone-section">
+            <h3 class="milestone-title">Experience</h3>
+            <div class="milestone-content">
+              <div class="milestone-item">
+                <h4>{% block experience_title %}Job Title / Role{% endblock %}</h4>
+                <p>{% block experience_duration %}Start Date - End Date (or Present){% endblock %}</p>
+                <p>{% block experience_description %}Describe your key responsibilities and major achievements in this role.{% endblock %}</p>
+              </div>
+            </div>
+          </div>
+          <div class="milestone-section">
+            <h3 class="milestone-title">Education</h3>
+            <div class="milestone-content">
+              <div class="milestone-item">
+                <h4>{% block education_title %}Degree Name, Major{% endblock %}</h4>
+                <p>{% block education_duration %}Institution Name, Graduation Year{% endblock %}</p>
+                <p>{% block education_description %}Mention any honors, thesis topics, or key areas of study.{% endblock %}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="intro-side">
+          {% comment %} {% block profile_video %}
+          <div class="profile-main-video-section">
+            <h2>Glimpse</h2>
+            <div class="profile-video-section-container">
+              <div class="profile-video-thumbnail" id="profile-thumbnail">
+                <img src="{% static 'profiles/Images/ZeroThumbnail.png' %}" alt="Video Thumbnail" id="profile-thumbnail-img">
+                <div class="profile-video-play-button" id="profile-play-button"></div>
+              </div>
+              <video controls id="profile-video">
+                <source src="{% static 'profiles/Images/TrialVideo2.mp4' %}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+          {% endblock %} {% endcomment %}
+          {% block profile_video %}
+          {% if profile.video %}
+            <div class="profile-main-video-section">
+              <h2>Glimpse</h2>
+              <div class="profile-video-section-container">
+                <div class="profile-video-thumbnail">
+                  {% if profile.video_thumbnail %}
+                    <img src="{{ profile.video_thumbnail.url }}" alt="Video Thumbnail">
+                  {% endif %}
+                  <div class="profile-video-play-button"></div>
+                </div>
+                <video controls>
+                  <source src="{{ profile.video.url }}" type="video/mp4">
+                </video>
+              </div>
+            </div>
+          {% elif profile.gallery_images.exists %}
+            <div class="profile-gallery-section">
+              <h2>Photos</h2>
+              <div class="gallery-container">
+                {% for img in profile.gallery_images.all|slice:":5" %}
+                  <div class="gallery-item">
+                    <img src="{{ img.image.url }}" alt="{{ img.caption }}">
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        {% endblock %}
+
+
+
+          {% block quick_facts %}
+          <div class="quick-facts">
+            <h3>Quick Facts</h3>
+            <div class="facts-grid">
+              <div class="fact"><span{% block facts_title1 %}>Location{% endblock %}</span><br><strong>{% block facts_answer1 %}City, Country{% endblock %}</strong></div>
+              <div class="fact"><span{% block facts_title2 %}>Industry{% endblock %}</span><br><strong>{% block facts_answer2 %}Your Industry{% endblock %}</strong></div>
+              <div class="fact"><span{% block facts_title3 %}>Looking For{% endblock %}</span><br><strong>{% block facts_answer3 %}Collaborations/Investments{% endblock %}</strong></div>
+              <div class="fact"><span{% block facts_title4 %}>Years of Experience{% endblock %}</span><br><strong>{% block facts_answer4 %}5+ Years{% endblock %}</strong></div>
+            </div>
+        </div>
+        {% endblock %}
+
+      </section>
+      {% endblock %}
+
+      <button class="backtotop">
+        <svg viewBox="0 0 384 512" class="svgIcon">
+          <path d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.214.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2V448c0 17.7 14.3 32 32 32s32-14.3 32-32V141.2L329.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.5 0-45.3l-160-160z"/>
+        </svg>
+      </div>
+
+      {% block investor_contribution %}
+      <div class="investor-contribution">
+        <div class="section-header-with-edit">
+          <h3>Contribution as Investor</h3>
+          <button class="edit-button" title="Edit your contribution">
+            <i class="fas fa-pen"></i>
+          </button>
+        </div>
+        <div class="contribution-cards">
+          <div class="contribution-card">
+            <h4>{% block contribution_title_1 %}Expertise Sharing{% endblock %}</h4>
+            <p>{% block contribution_description_1 %}Highlight key skills or knowledge you offer to others.{% endblock %}</p>
+          </div>
+          <div class="contribution-card">
+            <h4>{% block contribution_title_2 %}Support & Guidance{% endblock %}</h4>
+            <p>{% block contribution_description_2 %}Describe how you help and guide individuals or projects.{% endblock %}</p>
+          </div>
+          <div class="contribution-card">
+            <h4>{% block contribution_title_3 %}Community Engagement{% endblock %}</h4>
+            <p>{% block contribution_description_3 %}Explain how you contribute to your professional or personal networks.{% endblock %}</p>
+        </div>
+      </div>
+      {% endblock %}
+    </div>
+  </main>
+
+  {% comment %} {% block activity_post %}
+  <div class="activity-post">
+    <div class="activity-post-header">
+      <div class="activity-post-avatar">
+        <img src="{% static 'profiles/Images/brian.avif' %}" alt="{% block activity_post_author %}Brian Griffin{% endblock %}">
+      </div>
+      <div class="activity-post-author">{% block activity_post_author_name %}Brian Griffin{% endblock %}</div>
+      <div class="activity-post-time">{% block activity_post_time %}2 Hours ago{% endblock %}</div>
+      <div class="activity-post-more"></div>
+    </div>
+    <div class="activity-post-content">
+      {% block activity_post_content %}
+      Excited to announce our $2.5M seed round led by <a href="#">@VenturePartners</a>! We're revolutionizing sustainable packaging with our plant-based materials. Looking to expand our team with top engineering talent – reach out if you're passionate about making an environmental impact! <span class="hashtag">#Sustainability</span> <span class="hashtag">#GreenTech</span> <span class="hashtag">#Hiring</span>
+      {% endblock %}
+    </div>
+    <div class="activity-post-footer">
+      <div class="activity-post-stats">
+        <span class="icon"></span><span>{% block activity_post_likes %}25 Likes{% endblock %}</span>
+        <span class="comment-icon"></span><span>{% block activity_post_comments %}5 Comments{% endblock %}</span>
+        <span class="share-icon"></span><span>{% block activity_post_shares %}12 Shares{% endblock %}</span>
+      </div>
+      <div class="activity-post-actions">
+        <a href="#" class="like-action"><span class="action-icon"></span>Likes</a>
+        <a href="#" class="comment-action"><span class="action-icon"></span>Comment</a>
+        <a href="#" class="share-action"><span class="action-icon"></span>Share</a>
+        <a href="#" class="connect-action">Connect</a>
+      </div>
+    </div>
+  </div>
+  {% endblock %} {% endcomment %}
+
+
+
+  {% comment %} <div class="activity-post" data-post-id="post-1" style="border:2px solid none">
+    <div class="activity-post-left-section">
+      <div class="activity-post-images carousel-container">
+        <button class="carousel-btn prev" aria-label="Previous image">
+          <i class="fas fa-chevron-left carousel-icon"></i>
+        </button>
+        <div class="carousel-track">
+          <img class="carousel-item" src="https://lutris.net/media/games/screenshots/SanAndreas2.jpg" alt="Sustainable packaging prototype" data-index="0">
+          <img class="carousel-item" src="https://imgs.search.brave.com/q5QFn5zaXym-tHP4K9JmCfM9mYvRRPONTaviINcXX7w/rs:fit:0:180:1:0/g:ce/aHR0cHM6Ly93d3cu/aW1nLWNvcnAuY29t/L2ltYWdlcy9zbGlk/ZXMvY2l0aWVzL2lt/Zy10YWl3YW4uanBn" alt="Sustainable packaging prototype" data-index="1">
+          <img class="carousel-item" src="https://imgs.search.brave.com/VP6bhadxhTu3XJGhxpWaBIQmfeg-sykPeVRn3CsEBow/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pLnBp/bmltZy5jb20vb3Jp/Z2luYWxzLzFmLzNm/L2Y1LzFmM2ZmNWM2/MDU4MzcyZTkyNmFh/MWQyOTQ1ZTExYWE3/LmpwZw" alt="Sustainable packaging prototype" data-index="2">
+        </div>
+        <button class="carousel-btn next" aria-label="Next image">
+          <i class="fas fa-chevron-right carousel-icon"></i>
+        </button>
+      </div>
+    </div>
+    <div class="activity-post-right-section"  style="border:2px solid none">
+      <div class="activity-post-header" style="border:2px solid none">
+        <div class="activity-post-avatar">
+        </div>
+        <div class="activity-post-author">Brian Griffin</div>
+        <div class="activity-post-time">2 Hours ago</div>
+        <div class="activity-post-more" aria-label="More options"></div>
+      </div>
+      <div class="activity-post-container" style="border:2px solid none">
+        <div class="activity-post-content" style="border:2px solid none">
+          Excited to announce our $2.5M seed round led by <a href="#">@VenturePartners</a>! We're revolutionizing sustainable packaging with our plant-based materials. Looking to expand our team with top engineering talent – reach out if you're passionate about making an environmental impact! <span class="hashtag">#Sustainability</span> <span class="hashtag">#GreenTech</span> <span class="hashtag">#Hiring</span>
+        </div>
+        <div class="flex items-center justify-between border-t border-b border-gray-100 py-3 my-0 px-4">
+          <button class="flex items-center text-gray-500 hover:text-yellow-500"><i class="far fa-star mr-1 relative bottom-[2px]"></i> Star</button>
+          <button class="flex items-center text-gray-500 hover:text-[#026181]"><i class="far fa-comment mr-1"></i> Comment</button>
+          <button class="flex items-center text-gray-500 hover:text-[#026181]"><i class="fas fa-link mr-1"></i> Link-Up</button>
+        </div>
+        <div class="flex space-x-2 mb-6 mt-6">
+          <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Well Done!</button>
+          <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Congratulations!</button>
+        </div>
+        <div class="separator-line"></div>
+        <div class="comment-section">
+          <input type="text" class="comment-input" placeholder="Write a comment...">
+          <button class="post-button">Post</button>
+        </div>
+        <div class="activity-post-comments" style="display: none;">
+          <div class="comment-input-container">
+            <input type="text" class="comment-input" placeholder="Write a comment..." aria-label="Write a comment">
+            <button class="comment-submit">Post</button>
+          </div>
+          <div class="comments-list"></div>
+        </div>
+        <div class="more-menu">
+          <div class="more-menu-content">
+            <div class="more-menu-item" data-action="go-to-post">Go to post</div>
+            <div class="more-menu-item" data-action="copy-link">Copy Link</div>
+            <div class="more-menu-item" data-action="about-account">About this Account</div>
+            <div class="more-menu-item" data-action="cancel">Cancel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> {% endcomment %}
+
+  
+  
+  {% comment %} <div class="recent-activity">
+    <div><h3>Recent Activity</h3></div>
+    <div class="activity-posts">
+
+
+      <div class="activity-post" data-post-id="{{ post.id }}" style="border:2px solid none">
+        <div class="activity-post-left-section">
+          <div class="activity-post-images carousel-container">
+            <button class="carousel-btn prev" aria-label="Previous image">
+              <i class="fas fa-chevron-left carousel-icon"></i>
+            </button>
+            <div class="carousel-track">
+              {% for image in post.images.all %}
+                <img class="carousel-item" src="{{ image.image_url }}" alt="{{ image.alt_text|default:'Sustainable packaging prototype' }}" data-index="{{ forloop.counter0 }}">
+              {% endfor %}
+            </div>
+            <button class="carousel-btn next" aria-label="Next image">
+              <i class="fas fa-chevron-right carousel-icon"></i>
+            </button>
+          </div>
+        </div>
+        <div class="activity-post-right-section" style="border:2px solid none">
+          <div class="activity-post-header" style="border:2px solid none">
+            <div class="activity-post-avatar">
+              {% if post.author.profile_image %}
+                <img src="{{ post.author.profile_image.url }}" alt="{{ post.author.username }}">
+              {% endif %}
+            </div>
+            <div class="activity-post-author">{{ post.author.username }}</div>
+            <div class="activity-post-time">{{ post.created_at|timesince }} ago</div>
+            <div class="activity-post-more" aria-label="More options"></div>
+          </div>
+          <div class="activity-post-container" style="border:2px solid none">
+            <div class="activity-post-content" style="border:2px solid none">
+              {{ post.content|safe }}
+              {% for hashtag in post.hashtags.all %}
+                <span class="hashtag">{{ hashtag.name }}</span>
+              {% endfor %}
+            </div>
+            <div class="flex items-center justify-between border-t border-b border-gray-100 py-3 my-0 px-4">
+              <button class="flex items-center text-gray-500 hover:text-yellow-500"><i class="far fa-star mr-1 relative bottom-[2px]"></i> Star</button>
+              <button class="flex items-center text-gray-500 hover:text-[#026181]"><i class="far fa-comment mr-1"></i> Comment</button>
+              <button class="flex items-center text-gray-500 hover:text-[#026181]"><i class="fas fa-link mr-1"></i> Link-Up</button>
+            </div>
+            <div class="flex space-x-2 mb-6 mt-6">
+              {% for reaction in post.reactions.all %}
+                <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">{{ reaction.text }}</button>
+              {% endfor %}
+            </div>
+            <div class="separator-line"></div>
+            <div class="comment-section">
+              <input type="text" class="comment-input" placeholder="Write a comment...">
+              <button class="post-button">Post</button>
+            </div>
+            <div class="activity-post-comments" style="display: none;">
+              <div class="comment-input-container">
+                <input type="text" class="comment-input" placeholder="Write a comment..." aria-label="Write a comment">
+                <button class="comment-submit">Post</button>
+              </div>
+              <div class="comments-list">
+                {% for comment in post.comments.all %}
+                  <div class="comment">{{ comment.author.username }}: {{ comment.text }}</div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="more-menu">
+              <div class="more-menu-content">
+                <div class="more-menu-item" data-action="go-to-post">Go to post</div>
+                <div class="more-menu-item" data-action="copy-link">Copy Link</div>
+                <div class="more-menu-item" data-action="about-account">About this Account</div>
+                <div class="more-menu-item" data-action="cancel">Cancel</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+    <button class="view-more">View More</button>
+  </div> {% endcomment %}
+
+  <div class="recent-activity">
+    <div><h3>Recent Activity</h3></div>
+    <div class="activity-posts">
+      {% for post in posts %}
+        <div class="activity-post" data-post-id="{{ post.id }}" style="border:2px solid none">
+          <div class="activity-post-left-section">
+            <div class="activity-post-images carousel-container">
+              <button class="carousel-btn prev" aria-label="Previous image">
+                <i class="fas fa-chevron-left carousel-icon"></i>
+              </button>
+              <div class="carousel-track">
+                {% for image in post.images.all %}
+                  <img class="carousel-item" src="{{ image.image.url }}" alt="{{ image.alt_text|default:'Image' }}" data-index="{{ forloop.counter0 }}">
+                {% endfor %}
+              </div>
+              <button class="carousel-btn next" aria-label="Next image">
+                <i class="fas fa-chevron-right carousel-icon"></i>
+              </button>
+            </div>
+          </div>
+          <div class="activity-post-right-section" style="border:2px solid none">
+            <div class="activity-post-header" style="border:2px solid none">
+              <div class="activity-post-avatar">
+                {% if post.author.profile.profile_picture %}
+                  <img src="{{ post.author.profile.profile_picture.url }}" alt="{{ post.author.first_name }}">
+                {% else %}
+                  <i class="fas fa-user"></i>
+                {% endif %}
+              </div>
+              <div class="activity-post-author">{{ post.author.first_name }}</div>
+              <div class="activity-post-time">{{ post.created_at|timesince }} ago</div>
+              <div class="activity-post-more" aria-label="More options"></div>
+            </div>
+            <div class="activity-post-container" style="border:2px solid none">
+              <div class="activity-post-content" style="border:2px solid none">
+                {{ post.caption|safe }}
+                {% for hashtag in post.hashtags.all %}
+                  <span class="hashtag">{{ hashtag.name }}</span>
+                {% endfor %}
+              </div>
+              <div class="flex items-center justify-between border-t border-b border-gray-100 py-3 my-0 px-4">
+                <button class="flex items-center text-gray-500 hover:text-yellow-500"><i class="far fa-star mr-1 relative bottom-[2px]"></i> Star</button>
+                <button class="flex items-center text-gray-500 hover:text-[#026181]"><i class="far fa-comment mr-1"></i> Comment</button>
+                <button class="flex items-center text-gray-500 hover:text-[#026181]"><i class="fas fa-link mr-1"></i> Link-Up</button>
+              </div>
+              <div class="flex space-x-2 mb-0 mt-4">
+                <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Well Done!</button>
+                <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Congratulations!</button>
+                {% for reaction in post.reactions.all %}
+                  <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">{{ reaction.text }}</button>
+                {% endfor %}
+              </div>
+              <div class="separator-line"></div>
+              <div class="comment-section">
+                <input type="text" class="comment-input" placeholder="Write a comment...">
+                <button class="post-button">Post</button>
+              </div>
+              <div class="activity-post-comments" style="display: none;">
+                <div class="comment-input-container">
+                  <input type="text" class="comment-input" placeholder="Write a comment..." aria-label="Write a comment">
+                  <button class="comment-submit">Post</button>
+                </div>
+                <div class="comments-list">
+                  {% for comment in post.comments.all %}
+                    <div class="comment">{{ comment.author.username }}: {{ comment.text }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="more-menu">
+                <div class="more-menu-content">
+                  <div class="more-menu-item" data-action="go-to-post">Go to post</div>
+                  <div class="more-menu-item" data-action="copy-link">Copy Link</div>
+                  <div class="more-menu-item" data-action="about-account">About this Account</div>
+                  <div class="more-menu-item" data-action="cancel">Cancel</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p>No recent activity.</p>
+      {% endfor %}
+    </div>
+    <button class="view-more">View More</button>
+  </div>
+
+  <section class="footer-section">
+    <div class="footer-bottom">
+      <div class="footer-column">
+        <h3>ZERO</h3>
+        <p>Bridging the gap between innovative startups and visionary investors.</p>
+      </div>
+      <div class="footer-column">
+        <h3>For Entrepreneur</h3>
+        <ul>
+          <li>How It Works</li>
+          <li>Pricing</li>
+          <li>Success Stories</li>
+          <li>Startup Resources</li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h3>For Investor</h3>
+        <ul>
+          <li>Deal Flow</li>
+          <li>Due Diligence Tools</li>
+          <li>Investor Resources</li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h3>Stay updated</h3>
+        <p>Subscribe to our newsletter for the latest startup and investment insights.</p>
+        <div class="email-input">
+          <input type="email" placeholder="Your Email">
+          <button><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-copyright">
+      <p>© 2025 Zero Innovation. All Rights Reserved.</p>
+      <div class="footer-links">
+        <a href="#">Terms & Conditions</a>
+        <a href="#">Privacy Policy</a>
+      </div>
+      <div class="button-container">
+        <button class="button flex-center" aria-label="Instagram">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"  class="btn-svg" viewBox="0 0 16 16" fill="#fff">
+                
+
+                <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"/>
+                </svg>
+            </button>
+
+            <!-- X (formerly Twitter) -->
+            <button class="button flex-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"  class="btn-svg" viewBox="0 0 16 16" fill="#fff">
+                <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865z"/>
+                </svg>
+            </button>
+
+            <!-- YouTube -->
+            <button class="button flex-center" aria-label="YouTube">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="22px" class="btn-svg" fill="#fff">
+                <path d="M549.655 124.083c-6.281-23.65-24.806-42.275-48.453-48.586C457.109 64 288 64 288 64s-169.109 0-213.202 11.497c-23.647 6.311-42.172 24.936-48.453 48.586C16 168.388 16 256 16 256s0 87.612 10.345 131.917c6.281 23.65 24.806 42.275 48.453 48.586C118.891 448 288 448 288 448s169.109 0 213.202-11.497c23.647-6.311 42.172-24.936 48.453-48.586C560 343.612 560 256 560 256s0-87.612-10.345-131.917zM232 336V176l142 80-142 80z"/>
+                </svg>
+            </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lightbox Modal -->
+  <div id="lightbox" aria-modal="true" role="dialog" tabindex="-1">
+    <button id="lightbox-close" aria-label="Close">&times;</button>
+    <button id="lightbox-prev" aria-label="Previous">&#10094;</button>
+    <div id="lightbox-content"></div>
+    <button id="lightbox-next" aria-label="Next">&#10095;</button>
+  </div>
+   <script src="{% static 'profiles/js/profile.js' %}"></script>
+
+   {% block modal_section %}{% endblock %}
+
+    {% block extra_js %}
+    {% endblock %}
+    </body>
+</html>

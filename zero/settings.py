@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,10 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts',
     'landing',
-    'temp_home',
+    'home',
     'social_django',
+    'profiles',
+    'activity',
+    'accounts.apps.AccountsConfig',
 ]
 
 MIDDLEWARE = [
@@ -73,9 +76,7 @@ TEMPLATES = [
     },
 ]
 
-# STATICFILES_DIRS = [
-#     BASE_DIR / "static",
-# ]
+
 
 
 WSGI_APPLICATION = 'zero.wsgi.application'
@@ -140,6 +141,15 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'), # ✅ this is correct
+]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # Used by collectstatic in production
+
+# Media files (user-uploaded content)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # This will create a 'media' folder at your project root
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -154,23 +164,52 @@ AUTHENTICATION_BACKENDS = [
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '512120055820-76mm71p57r5k1pe6bgivha8in3uqnine.apps.googleusercontent.com'  # Replace with your Client ID
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'  # Replace with your Client Secret
 
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/temp/'  # Redirect to home after login
-SOCIAL_AUTH_LOGIN_ERROR_URL = '/login-error/'  # Redirect on login failure
-LOGIN_REDIRECT_URL = '/temp/'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+]
+
+SOCIAL_AUTH_ALWAYS_REDIRECT = True
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/home/'  # Redirect to home after login
+SOCIAL_AUTH_LOGIN_ERROR_URL = '/authentication/'  # Redirect on login failure
+LOGIN_REDIRECT_URL = '/home/'
 LOGIN_URL = '/authentication/'
 
 # Use email as username (helps prevent duplicate username collisions)
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 
-# Define custom pipeline to manage user creation and avoid overwriting
+# Pipeline configuration
+# settings.py
+
 SOCIAL_AUTH_PIPELINE = (
+    # Get the basic social profile details (uid, extra_data)
     'social_core.pipeline.social_auth.social_details',
     'social_core.pipeline.social_auth.social_uid',
     'social_core.pipeline.social_auth.auth_allowed',
+
+    # This step tries to load an existing user based on the social UID.
+    # It also sets up the 'strategy' object with the current backend.
     'social_core.pipeline.social_auth.social_user',
+
+    # At this point, 'strategy.backend' should be fully initialized.
+    # Now, attempt to find a user by email, which might be a pre-existing non-social account.
+    'social_core.pipeline.social_auth.associate_by_email',
+
+    # --- Your custom pipeline function should come AFTER 'social_user' and 'associate_by_email' ---
+    # This is where 'strategy.backend.name' should now be reliably available.
+    'accounts.pipeline.prevent_social_login_if_email_exists',
+
+    # Get a username, creating a new user if not already associated/found
     'social_core.pipeline.user.get_username',
-    'social_core.pipeline.user.create_user',  # Ensures new user gets created
+    'social_core.pipeline.user.create_user', # Creates a new user if 'user' is None so far
+
+    # --- Your custom pipeline function for saving user details ---
+    'accounts.pipeline.save_user_details',
+
+    # Associate the social account with the user (whether newly created or existing)
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
-    'social_core.pipeline.user.user_details',
+    'social_core.pipeline.user.user_details', # Update user details with social data
 )
+
+AUTH_USER_MODEL = 'accounts.User'

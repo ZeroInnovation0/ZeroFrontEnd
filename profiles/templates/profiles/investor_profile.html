@@ -1,0 +1,596 @@
+{% extends 'profiles/base_profile.html' %}
+{% load static %}
+{% load profile_tags %}
+
+{% block title %}
+{{ profile.user.get_full_name }} - Investor Profile
+{% endblock %}
+
+{% block user_name %}
+{{ profile.user.first_name }}
+{% endblock %}
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% block profile_card %}
+<div class="profile-card-wrapper">
+  <aside class="profile-card">
+    <div class="card-content">
+      {% if profile.profile_picture %}
+        <img src="{{ profile.profile_picture.url }}" alt="{{ profile.user.first_name }}" class="card-image">
+      {% else %}
+        <img src="{% static 'profiles/Images/brian.avif' %}" alt="{{ profile.user.first_name }}" class="card-image">
+      {% endif %}
+      <h2 class="card-name">{{ profile.user.get_full_name }}</h2>
+      <p class="card-role"><span class="role-highlight">{{ profile.user.user_type|capfirst }}</span> | {{ profile.position }}</p>
+      <p class="card-description">{{ profile.description }}</p>
+      <button class="share-button">Share Profile</button>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block profile_header %}
+<section class="profile-header">
+  <div class="profile-pic-wrapper">
+    {% if profile.profile_picture %}
+      <img src="{{ profile.profile_picture.url }}" alt="{{ profile.user.first_name }}" class="profile-pic">
+    {% else %}
+      <img src="{% static 'profiles/Images/brian.avif' %}" alt="{{ profile.user.first_name }}" class="profile-pic">
+    {% endif %}
+    {% if is_owner %}
+      <form id="uploadForm" method="POST" enctype="multipart/form-data" action="{% url 'profiles:update_picture' profile.slug %}" style="display: none;">
+        {% csrf_token %}
+        <input type="file" name="profile_picture" id="fileInput" accept="image/*" onchange="document.getElementById('uploadForm').submit();" />
+      </form>
+      <div class="profile-pic-edit" onclick="document.getElementById('fileInput').click();">
+        <i class="fas fa-image"></i>
+      </div>
+    {% endif %}
+  </div>
+  <h1 class="profile-name">{{ profile.user.get_full_name }}</h1>
+  <p class="profile-role"><span class="role-highlight">{{ profile.user.user_type|capfirst }}</span> | {{ profile.position }}</p>
+</section>
+{% endblock %}
+
+{% block profile_content %}
+<section class="profile-story">
+  <div class="section-header-with-edit">
+    <h2 class="section-title">My Story</h2>
+    {% if is_owner %}
+      <button class="edit-button" data-section="story">
+        <i class="fas fa-pen"></i>
+      </button>
+    {% endif %}
+  </div>
+  <p class="profile-description">{{ profile.story }}</p>
+</section>
+{% endblock %}
+
+{% block milestones %}
+<section class="profile-grid">
+  <div class="milestones">
+    <div class="section-header">
+      <h2>Milestones & Journey</h2>
+      <a href="{% url 'profiles:profile_milestones' profile.slug %}" class="view-all">View All →</a>
+    </div>
+    <!-- Experience -->
+    <div class="milestone-section">
+      <h3 class="milestone-title">Experience</h3>
+      <div class="milestone-content">
+        {% for experience in profile.experiences.all %}
+        <div class="milestone-item">
+          <h4>{{ experience.title }}</h4>
+          <p>{{ experience.duration }}</p>
+          <p>{{ experience.description }}</p>
+        </div>
+        {% empty %}
+        <p>No experience listed.</p>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- Education -->
+    <div class="milestone-section">
+      <h3 class="milestone-title">Education</h3>
+      <div class="milestone-content">
+        {% for education in profile.educations.all %}
+        <div class="milestone-item">
+          <h4>{{ education.title }}</h4>
+          <p>{{ education.duration }}</p>
+          <p>{{ education.description }}</p>
+        </div>
+        {% empty %}
+        <p>No education listed.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="intro-side">
+    {% block profile_video %}
+    <div class="profile-main-video-section">
+      <div class="profile-main-video-details">
+        <h2>Glimpse</h2>
+        {% if is_owner %}
+        <button class="edit-button" data-section="video" title="Edit your Glimpse">
+          <i class="fas fa-pen"></i>
+        </button>
+        {% endif %}
+      </div>
+      {% if profile.video %}
+      <div class="profile-video-section-container">
+        <div class="profile-video-thumbnail" id="profile-thumbnail">
+          {% if profile.video_thumbnail %}
+            <img src="{{ profile.video_thumbnail.url }}" alt="Video Thumbnail" id="profile-thumbnail-img">
+          {% else %}
+            <img src="{% static 'profiles/Images/ZeroThumbnail.png' %}" alt="Video Thumbnail" id="profile-thumbnail-img">
+          {% endif %}
+          <div class="profile-video-play-button" id="profile-play-button"></div>
+        </div>
+        <video controls id="profile-video">
+          <source src="{{ profile.video.url }}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+      {% elif profile.gallery_images.count %}
+      <div class="profile-gallery-carousel">
+        <button class="carousel-btn prev" onclick="slideGallery(-1)">
+          <i class="fas fa-chevron-left carousel-icon"></i>
+        </button>
+        <button class="carousel-btn next" onclick="slideGallery(1)">
+          <i class="fas fa-chevron-right carousel-icon"></i>
+        </button>
+        <div class="carousel-track-container">
+          <ul class="carousel-track" id="galleryCarouselTrack">
+            {% for img in profile.gallery_images.all|slice:":5" %}
+              <li class="carousel-slide">
+                <div class="image-wrapper">
+                  <img src="{{ img.image.url }}" alt="{{ img.caption|default:'Gallery Image' }}" class="gallery-image">
+                  {% if is_owner %}
+                    <form method="POST" action="{% url 'profiles:delete_photo' img.id %}" class="delete-photo-form">
+                      {% csrf_token %}
+                      {% comment %} <button type="submit" class="delete-photo-btn" title="Delete Photo">×</button> {% endcomment %}
+                    </form>
+                  {% endif %}
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endblock %}
+
+    {% block quick_facts %}
+    <div class="quick-facts">
+      <div class="quick-facts-edits">
+        <h3>Quick Facts</h3>
+        {% if is_owner %}
+        <button class="edit-button" data-section="facts">
+          <i class="fas fa-pen"></i>
+        </button>
+        {% endif %}
+      </div>
+      <div class="facts-grid">
+        {% for fact in profile.facts.all|slice:":4" %}
+          <div class="fact">
+            <span>{{ fact.title }}</span><br>
+            <strong>{{ fact.answer }}</strong>
+          </div>
+        {% empty %}
+          <div class="fact">
+            <span>No facts available</span><br>
+            <strong>-</strong>
+          </div>
+          <div class="fact">
+            <span>No facts available</span><br>
+            <strong>-</strong>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endblock %}
+  </div>
+</section>
+{% endblock %}
+
+{% block investor_contribution %}
+<div class="investor-contribution">
+  <div class="section-header-with-edit">
+    <h3>Contribution as Investor</h3>
+    {% if is_owner %}
+      <button class="edit-button" data-section="contrib">
+        <i class="fas fa-pen"></i>
+      </button>
+    {% endif %}
+  </div>
+  <div class="contribution-cards">
+    {% for contribution in profile.contributions.all %}
+    <div class="contribution-card">
+      <h4>{{ contribution.title }}</h4>
+      <p>{{ contribution.description }}</p>
+    </div>
+    {% empty %}
+    <div class="contribution-card">
+      <h4>No Contributions</h4>
+      <p>No investor contributions listed yet.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block modal_section %}
+<div id="editAllModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-scroll-area">
+      <!-- Edit Story -->
+      <section id="edit-story-section" class="edit-section">
+        <h2>Edit My Story</h2>
+        <form method="POST" action="{% url 'profiles:update_story' profile.slug %}">
+          {% csrf_token %}
+          <label>Story</label>
+          <textarea name="story" rows="4">{{ profile.story }}</textarea>
+          <label>Position</label>
+          <input type="text" name="position" value="{{ profile.position }}">
+          <label>Card Description</label>
+          <textarea name="description" rows="3">{{ profile.description }}</textarea>
+          <div class="modal-actions">
+            <button type="submit">Save Story</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Edit Glimpse (Video or Gallery) -->
+      <section id="edit-video-section" class="edit-section">
+        <h2>Edit Glimpse</h2>
+        {% if profile.video %}
+          <h4>Uploaded Video</h4>
+          <p>{{ profile.video.name|basename }}</p>
+          <form method="POST" action="{% url 'profiles:delete_video' profile.slug %}">
+            {% csrf_token %}
+            <button type="submit" class="delete-btn">Delete Video</button>
+          </form>
+        {% endif %}
+        <form method="POST" action="{% url 'profiles:update_video' profile.slug %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <label>Upload New Video</label>
+          <input type="file" name="video" accept="video/*">
+          <label>Video Thumbnail</label>
+          <input type="file" name="video_thumbnail" accept="image/*">
+          <div class="modal-actions">
+            <button type="submit">Save Video</button>
+          </div>
+        </form>
+        <hr>
+        {% if profile.gallery_images.all %}
+          <h4>Uploaded Images</h4>
+          <ul class="uploaded-list" id="uploadedImageList">
+            {% for img in profile.gallery_images.all %}
+              <li data-image-id="{{ img.id }}">
+                <span>{{ img.image.name|basename }}</span>
+                <button type="button" class="delete-btn" onclick="markForDeletion(this, {{ img.id }})">×</button>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        <form method="POST" action="{% url 'profiles:update_gallery' profile.slug %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <label>Add More Photos (max 5)</label>
+          <input type="file" name="gallery_images" accept="image/*" multiple>
+          <p id="gallery-warning" style="color: red; display: none;"></p> <!-- Warning message -->
+          <div class="modal-actions">
+            <button type="submit">Save Photos</button>
+          </div>
+          <input type="hidden" name="deleted_image_ids" id="deletedImageIds" value="">
+        </form>
+      </section>
+
+      <!-- Edit Quick Facts -->
+      <section id="edit-facts-section" class="edit-section">
+        <h2>Edit Quick Facts</h2>
+        {% if profile.facts.all %}
+          {% for fact in profile.facts.all %}
+            <div class="facts-forms-section">
+              <form method="POST" action="{% url 'profiles:edit_fact' fact.id %}" class="fact-edit-form">
+                {% csrf_token %}
+                <label>Title</label>
+                <input type="text" name="title" value="{{ fact.title }}" required>
+                <label>Answer</label>
+                <input type="text" name="answer" value="{{ fact.answer }}" required>
+                <div class="modal-actions">
+                  <button type="submit">Save</button>
+                </div>
+              </form>
+              <form method="POST" action="{% url 'profiles:delete_fact' fact.id %}">
+                {% csrf_token %}
+                <button type="submit" class="delete-btn">Delete</button>
+              </form>
+            </div>
+          {% endfor %}
+        {% endif %}
+        {% if profile.facts.count < 4 %}
+          <form method="POST" action="{% url 'profiles:manage_facts' profile.slug %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Add Fact</button>
+          </form>
+        {% else %}
+          <p>You can only add up to 4 facts.</p>
+        {% endif %}
+      </section>
+
+      <!-- Edit Contributions -->
+      <section id="edit-contrib-section" class="edit-section">
+        <h2>Edit Contributions</h2>
+        {% for c in profile.contributions.all %}
+          <div class="contribution-forms-section">
+            <form method="POST" action="{% url 'profiles:edit_contribution' c.id %}" class="contrib-edit-form">
+              {% csrf_token %}
+              <label>Title</label>
+              <input type="text" name="title" value="{{ c.title }}" required>
+              <label>Description</label>
+              <textarea name="description" rows="2" required>{{ c.description }}</textarea>
+              <div class="modal-actions">
+                <button type="submit">Save</button>
+              </div>
+            </form>
+            <form method="POST" action="{% url 'profiles:delete_contribution' c.id %}">
+              {% csrf_token %}
+              <button type="submit" class="delete-btn">Delete</button>
+            </form>
+          </div>
+        {% endfor %}
+        {% if profile.contributions.count < 9 %}
+          <form method="POST" action="{% url 'profiles:add_contribution' profile.slug %}">
+            {% csrf_token %}
+            <label>Title</label>
+            <input type="text" name="title" required>
+            <label>Description</label>
+            <textarea name="description" rows="2" required></textarea>
+            <button type="submit">Add Contribution</button>
+          </form>
+        {% else %}
+          <p>You can only add up to 9 contributions.</p>
+        {% endif %}
+      </section>
+    </div>
+    <div class="modal-fixed-footer">
+      <button type="button" class="modal-close" onclick="closeEditModal()">Cancel</button>
+      <button type="submit" form="" class="save-btn" disabled title="Save All is disabled (use section saves)">
+        Save All
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Modal open/close & soft-delete
+    const modal = document.getElementById('editAllModal');
+    const content = modal.querySelector('.modal-scroll-area');
+    const sections = Array.from(content.querySelectorAll('.edit-section'));
+    const editButtons = document.querySelectorAll('.edit-button[data-section]');
+    
+    let originalGalleryHtml = ''; 
+    let deletedImageIds = [];
+    let currentSelectedNewFiles = []; // Array to hold File objects for new uploads
+
+    function openEditModal(key) {
+        sections.forEach(s => s.style.order = 0);
+        const target = document.getElementById(`edit-${key}-section`);
+        if (!target) return;
+        target.style.order = -1;
+        
+        if (key === 'video') {
+            const ul = document.getElementById('uploadedImageList');
+            if (ul) {
+                originalGalleryHtml = Array.from(ul.querySelectorAll('li[data-image-id]'))
+                                        .map(li => li.outerHTML).join('');
+            }
+        }
+        modal.classList.add('active');
+        document.body.classList.add('modal-open');
+        content.scrollTop = 0;
+        {% comment %} updateFileSelectionMessage(); {% endcomment %}
+    }
+
+    function closeEditModal() {
+        const ul = document.getElementById('uploadedImageList');
+        if (currentSelectedNewFiles.length > 0) {
+            if (!confirm('You have unsaved image previews. Are you sure you want to close?')) {
+                return;
+            }
+        }
+        sections.forEach(s => s.style.order = 0);
+        modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+        
+        if (ul) {
+            ul.innerHTML = originalGalleryHtml || '';
+        }
+
+        deletedImageIds = [];
+        document.getElementById('deletedImageIds').value = '';
+        
+        currentSelectedNewFiles = []; 
+        updateFileInputsFromNewFiles();
+        fileInput.value = ''; 
+
+        modal.querySelectorAll('form').forEach(f => f.reset());
+        {% comment %} updateFileSelectionMessage(); {% endcomment %}
+        const warning = document.getElementById('gallery-warning');
+        if (warning) warning.style.display = 'none';
+    }
+
+    editButtons.forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.preventDefault();
+            openEditModal(btn.dataset.section);
+        });
+    });
+    modal.addEventListener('click', e => {
+        if (e.target === modal || e.target.classList.contains('modal-close')) {
+            closeEditModal();
+        }
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) closeEditModal();
+    });
+
+    // Carousel sliding
+    const track = document.getElementById('galleryCarouselTrack');
+    let currentSlide = 0;
+    window.slideGallery = dir => {
+        if (!track) return;
+        const slides = track.querySelectorAll('.carousel-slide');
+        const total = slides.length;
+        if (!total) return;
+        currentSlide = (currentSlide + dir + total) % total;
+        track.style.transform = `translateX(-${currentSlide * 100}%)`;
+    };
+    if (track) setTimeout(() => slideGallery(0), 50);
+
+    // Soft-delete for existing images
+    window.markForDeletion = (btn, id) => {
+        deletedImageIds.push(id);
+        btn.closest('li').remove();
+        document.getElementById('deletedImageIds').value = deletedImageIds.join(',');
+        {% comment %} updateFileSelectionMessage(); {% endcomment %}
+    };
+
+    // Display filename as-is
+    function getFileDisplayName(filename) {
+        return filename;
+    }
+
+    // Preview new images
+    const fileInput = document.querySelector('input[name="gallery_images"]');
+    const uploadedList = document.getElementById('uploadedImageList');
+    const warningElement = document.getElementById('gallery-warning');
+    const MAX_IMAGES = 5;
+
+    {% comment %} function updateFileSelectionMessage() {
+        if (!fileInput || !uploadedList) return;
+        const uploadedCount = uploadedList.querySelectorAll('li[data-image-id]').length;
+        const previewCount = currentSelectedNewFiles.length;
+        const remaining = MAX_IMAGES - (uploadedCount + previewCount);
+        let msg = document.getElementById('gallery-slot-message');
+        if (!msg) {
+            msg = document.createElement('p');
+            msg.id = 'gallery-slot-message';
+            const saveBtn = fileInput.closest('form').querySelector('.modal-actions button');
+            saveBtn?.parentNode.insertBefore(msg, fileInput.nextSibling);
+        }
+        msg.textContent = remaining > 0
+            ? `You can add up to ${remaining} more image(s).`
+            : `Maximum of ${MAX_IMAGES} images reached.`;
+        fileInput.disabled = remaining <= 0;
+    } {% endcomment %}
+
+    // Render previews for newly selected images
+    function renderPreviews() {
+        uploadedList.querySelectorAll('.preview-image').forEach(el => el.remove());
+
+        currentSelectedNewFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const li = document.createElement('li');
+                li.className = 'preview-image';
+                li.dataset.fileName = file.name;
+                li.dataset.fileSize = file.size;
+                li.dataset.fileInternalIndex = index;
+
+                li.innerHTML = `
+                    <img src="${e.target.result}" style="max-height:80px;margin-right:10px;">
+                    <span>${getFileDisplayName(file.name)}</span>
+                    <button type="button" class="delete-btn preview-delete-btn">×</button>
+                `;
+                uploadedList.appendChild(li);
+
+                li.querySelector('.preview-delete-btn').addEventListener('click', () => {
+                    const fileToRemoveInternalIndex = parseInt(li.dataset.fileInternalIndex);
+                    currentSelectedNewFiles.splice(fileToRemoveInternalIndex, 1);
+                    
+                    renderPreviews();
+                    updateFileInputsFromNewFiles();
+                    {% comment %} updateFileSelectionMessage(); {% endcomment %}
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Update file input's files based on currentSelectedNewFiles
+    function updateFileInputsFromNewFiles() {
+        const dataTransfer = new DataTransfer();
+        currentSelectedNewFiles.forEach(file => dataTransfer.items.add(file));
+        fileInput.files = dataTransfer.files;
+    }
+
+    if (fileInput && uploadedList) {
+        fileInput.addEventListener('change', (event) => {
+            const filesFromInput = Array.from(event.target.files);
+            const filesToAdd = [];
+            const rejectedNames = [];
+            const existingFileNamesSet = new Set();
+
+            // Collect existing original_filename from DB images (case-insensitive)
+            uploadedList.querySelectorAll('li[data-image-id] span').forEach(span => {
+                existingFileNamesSet.add(span.textContent.toLowerCase());
+            });
+
+            // Collect original_filename of files already in currentSelectedNewFiles (case-insensitive)
+            currentSelectedNewFiles.forEach(file => {
+                existingFileNamesSet.add(file.name.toLowerCase());
+            });
+
+            const uploadedCount = uploadedList.querySelectorAll('li[data-image-id]').length;
+            const currentNewFilesCount = currentSelectedNewFiles.length;
+            let availableSlots = MAX_IMAGES - (uploadedCount + currentNewFilesCount);
+
+            filesFromInput.forEach(file => {
+                if (availableSlots <= 0) {
+                    rejectedNames.push(file.name);
+                    return;
+                }
+                if (existingFileNamesSet.has(file.name.toLowerCase())) {
+                    rejectedNames.push(file.name);
+                    return;
+                }
+                filesToAdd.push(file);
+                existingFileNamesSet.add(file.name.toLowerCase());
+                availableSlots--;
+            });
+
+            currentSelectedNewFiles = currentSelectedNewFiles.concat(filesToAdd);
+            
+            renderPreviews();
+            updateFileInputsFromNewFiles();
+            {% comment %} updateFileSelectionMessage(); {% endcomment %}
+
+            if (rejectedNames.length > 0 && warningElement) {
+                warningElement.textContent = `Skipped: ${rejectedNames.join(', ')} (duplicates or max limit reached).`;
+                warningElement.style.display = 'block';
+                setTimeout(() => { warningElement.style.display = 'none'; }, 5000);
+            } else if (warningElement) {
+                warningElement.style.display = 'none';
+            }
+
+            event.target.value = ''; // Clear input after processing
+        });
+
+        {% comment %} updateFileSelectionMessage(); {% endcomment %}
+    }
+});
+</script>
+{% endblock %}

@@ -1,8 +1,18 @@
+@font-face {
+    font-family: 'Helvetica Custom'; /* Give it a unique, memorable name for use in CSS */
+    src: url('/static/fonts/HelveticaNeueMedium.otf') format('woff'); /* Path to your font file */
+    font-weight: normal; /* Adjust if this specific WOFF is 'bold' or a different weight */
+    font-style: normal;
+}
+
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Arial', sans-serif;
+    /* font-family: 'Helvetica Neue', sans-serif; */
+    font-family: 'Helvetica Custom';
+
 }
 
 body {
@@ -297,7 +307,7 @@ nav button {
 }
 
 .static-paragraph {
-    font-size: 32px;
+    font-size: 30px;
     margin-bottom: 30px;
     position: relative;
 }
@@ -855,7 +865,7 @@ nav button {
         width: 350px;
         height: 200px;
         perspective: 1000px;
-        font-family: sans-serif;
+        /* font-family: sans-serif; */
         }
 
 
@@ -1475,6 +1485,11 @@ nav button {
 } */
 .footer-column h3{
     cursor: pointer;
+}
+
+.footer-column a{
+    text-decoration: none;
+    color: #fff;
 }
 
 .footer-bottom {

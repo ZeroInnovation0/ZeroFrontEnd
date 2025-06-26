@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zero Inn</title>
     <link rel="stylesheet" href="{% static 'landing/css/styles.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/Logo.png' %}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.0/gsap.min.js"></script>
@@ -26,10 +27,10 @@
             <a href="#">For Investors</a>
             <a href="#">Blog</a>
             {% comment %} <a href="#"><button>Log in</button></a> {% endcomment %}
-            <a href="{% url 'zero_auth' %}#login"><button>Log in</button></a>
+            <a href="{% url 'accounts:login' %}"><button>Log in</button></a>
         </div>
         <div class="auth-buttons">
-            <a href="{% url 'zero_auth' %}#signup"><button>Signup</button></a>
+            <a href="{% url 'accounts:select_user_type' %}"><button>Signup</button></a>
             {% comment %} <a href="#"><button>Signup</button></a> {% endcomment %}
         </div>
     </nav>
@@ -44,8 +45,8 @@
             <p class="static-paragraph">The next-generation platform connecting <br> startups with strategic investors.</p>
             <div class="buttons">
                 {% comment %} <a href="{% url 'signup' %}" style="text-decoration: none;"><button class="entrepreneur-btn"><i class="fas fa-rocket"></i>Entrepreneur Portal</button></a> {% endcomment %}
-                <a href="#" style="text-decoration: none;"><button class="entrepreneur-btn"><i class="fas fa-rocket"></i>Entrepreneur Portal</button></a>
-                <a href="#" style="text-decoration: none;"><button class="investor-btn"><i class="fas fa-chart-line"></i>Investor Portal</button></a>
+                <a href="{% url 'accounts:register' %}?type=entrepreneur" style="text-decoration: none;"><button class="entrepreneur-btn"><i class="fas fa-rocket"></i>Entrepreneur Portal</button></a>
+                <a href="{% url 'accounts:register' %}?type=investor" style="text-decoration: none;"><button class="investor-btn"><i class="fas fa-chart-line"></i>Investor Portal</button></a>
                 {% comment %} <a href="{% url 'signup' %}" style="text-decoration: none;"><button class="investor-btn"><i class="fas fa-chart-line"></i>Investor Portal</button></a> {% endcomment %}
             </div>
             <div class="hero-image"></div>
@@ -413,7 +414,7 @@
                     <p>A quick look can make everything clearer.<br> The demo shows exactly how to get started, step by step.</p>
                     <div class="button-container">
                         {% comment %} <a href="{% url 'signup' %}" style="text-decoration: none;"><button class="btn btn-primary" id="start-building">Start Building</button></a> {% endcomment %}
-                        <a href="#" style="text-decoration: none;"><button class="btn btn-primary" id="start-building">Start Building</button></a>
+                        <a href="{% url 'accounts:select_user_type' %}" style="text-decoration: none;"><button class="btn btn-primary" id="start-building">Start Building</button></a>
                         <button class="btn btn-secondary" id="watch-demo">Watch Demo</button>
                     </div>
                 </div>
@@ -874,8 +875,8 @@
                     <div class="footer-buttons">
                         <div class="button-group">
                             {% comment %} <a href="{% url 'signup' %}" style="text-decoration: none;"><button class="join-investor">Join as Investor</button></a> {% endcomment %}
-                            <a href="#" style="text-decoration: none;"><button class="join-investor">Join as Investor</button></a>
-                            <a href="#" style="text-decoration: none;"><button class="join-entrepreneur">Join as Entrepreneur</button></a>
+                            <a href="{% url 'accounts:register' %}?type=investor" style="text-decoration: none;"><button class="join-investor">Join as Investor</button></a>
+                            <a href="{% url 'accounts:register' %}?type=entrepreneur" style="text-decoration: none;"><button class="join-entrepreneur">Join as Entrepreneur</button></a>
                             {% comment %} <a href="{% url 'signup' %}" style="text-decoration: none;"><button class="join-entrepreneur">Join as Entrepreneur</button></a> {% endcomment %}
                         </div>
                     </div>

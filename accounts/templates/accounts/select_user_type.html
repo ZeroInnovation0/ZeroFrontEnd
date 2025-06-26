@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Role Selection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'accounts/css/select_user_type.css' %}" />
+  <link rel="icon" type="image/png" href="{% static 'images/Logo.png' %}">
+</head>
+<body>
+  <div class="role-container">
+    <div class="role-image-section">
+      <img src="{% static 'accounts/Images/allthree1.png' %}" alt="Roles Illustration" />
+    </div>
+    <div class="role-content-section">
+      <h1>Empowering Your Journey Forward</h1>
+      <p>Choose your role to personalize your experience and unlock tailored features.</p>
+      <div class="role-buttons">
+        <a href="{% url 'accounts:register' %}?type=investor">
+          <button>
+            <i class="fas fa-chart-line"></i>
+            Join as an <br>  Investor
+          </button>
+        </a>
+        <a href="{% url 'accounts:register' %}?type=entrepreneur">
+          <button>
+            <i class="fas fa-rocket"></i>
+            Join as an <br>  Entrepreneur
+          </button>
+        </a>
+        <a href="{% url 'accounts:register' %}?type=explorer">
+          <button>
+            <i class="fas fa-compass"></i>
+            Join as an <br> Explorer
+          </button>
+        </a>
+      </div>
+      <div class="role-login-link">
+        <a href="{% url 'accounts:login' %}">Already Logged In?</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

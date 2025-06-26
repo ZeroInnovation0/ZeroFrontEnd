@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Django Homepage</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'home/css/styles.css' %}">
+</head>
+<body>
+    <header>
+        <h1>My Django Homepage</h1>
+        <nav>
+            <a href="{% url 'accounts:logout' %}">Logout</a>
+        </nav>
+    </header>
+    <div class="container">
+        <h2>Welcome,
+            {% if user.is_authenticated %}
+                {{ user.email }}!
+            {% comment %} {% else %}
+                Guest! {% endcomment %}
+            {% endif %}
+        </h2>
+        <p>This is a simple Django-based homepage example.</p>
+        <button onclick="showMessage()">Click Me!</button>
+        <div id="message" class="message"></div>
+    </div>
+    <script src="{% static 'home/js/animation.js' %}"></script>
+</body>
+</html>

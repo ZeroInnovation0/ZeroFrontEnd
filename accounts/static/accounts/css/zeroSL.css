@@ -1,10 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
+@font-face {
+    font-family: 'Helvetica Custom'; /* Give it a unique, memorable name for use in CSS */
+    src: url('/static/fonts/HelveticaNeueMedium.otf') format('woff'); /* Path to your font file */
+    font-weight: normal; /* Adjust if this specific WOFF is 'bold' or a different weight */
+    font-style: normal;
+    font-display: swap; /* Recommended for better loading experience */
+}
+
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: "Poppins", sans-serif;
+    font-family: "Helvetica Custom";
     text-decoration: none;
     list-style: none;
     user-select: none;
@@ -17,6 +26,7 @@ body {
     align-items: center;
     min-height: 100vh;
     background: linear-gradient(90deg, #E8EAEB);
+    font-family: "Helvetica Custom";
 }
 
 .container {
@@ -48,7 +58,7 @@ form {
 .form-box {
     position: absolute;
     right: 0;
-    width: 50%;
+    width: 55%;
     height: 100%;
     background: #fff;
     display: flex;
@@ -66,13 +76,14 @@ form {
     align-items: flex-start;
 }
 
-.container.active .form-box{ right: 50%; }
+.container.active .form-box{ right: 45%; }
 
     .form-box.register{ visibility: hidden; }
         .container.active .form-box.register{ visibility: visible; }
 
     .register-form{
         /* border: 2px solid red; */
+        height: 100%;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
@@ -93,11 +104,11 @@ form {
     margin-bottom: 0;
 } */
 
-#label_email_login, #label_firstname, #label_lastname, #label_password, #label_email_signup, #signup-label_password, #signup-confirm-label_password{
+#label_email_login, #label_company #label_firstname, #label_lastname, #label_password, #label_email_signup, #signup-label_password, #signup-confirm-label_password{
     font-size: 13px;
 }
 
-#login-email, #signup-email{
+#login-email, #signup-email, #company_name{
     width: 100%;
     /* padding-right: 120px; */
 }
@@ -110,6 +121,7 @@ form {
 
 .register-form .input-box{
     margin-bottom: 10px;
+    /* border: 2px solid red; */
 }
 
 .btn-shine {
@@ -133,11 +145,12 @@ form {
     font-size: 36px;
     text-decoration: none;
     white-space: nowrap;
-    font-family: "Poppins", sans-serif;
+    /* font-family: "Poppins", sans-serif; */
 }
 
 .register-form .btn-shine{
-    margin-bottom: 10px;
+    /* border: 2px solid red; */
+    margin-bottom: 35px;
 }
 
 /* @keyframes shine {
@@ -202,8 +215,10 @@ form {
 
 .forgot-link {
     /* margin: -15px 0 15px; */
+    width: 100%;
     display: flex;
-    align-items: center;
+    align-items: space-between;
+    justify-content: space-between;
     gap: 125px;
     margin-bottom: 20px;
 }
@@ -214,7 +229,7 @@ form {
   justify-content: center;
   background-color: white;
   border-radius: 4px;
-  padding: 10px 39px;
+  padding: 10px 50px;
   font-size: 14px;
   color: #026181;
   cursor: pointer;
@@ -228,7 +243,7 @@ form {
     border: 1px solid #CBD5E1;
     cursor: pointer;
     font-weight: 600;
-
+    /* font-family: 'Helvetica Neue'; */
 }
 
 .login-form .google-btn{
@@ -246,7 +261,60 @@ form {
   margin-right: 10px;
 }
 
+/* --- NEW CSS FOR TOAST MESSAGES --- */
+#toast-container {
+    position: fixed;
+    top: 20px; /* Adjust as needed */
+    right: 20px; /* Adjust as needed */
+    z-index: 1000; /* Ensure it's above other content */
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between multiple toasts */
+}
 
+.toast-message {
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    opacity: 0; /* Start hidden */
+    transform: translateY(-20px); /* Start slightly above */
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out, visibility 0.3s;
+    visibility: hidden; /* Hide completely when not visible */
+    min-width: 250px; /* Ensure a decent size */
+    text-align: center;
+}
+
+.toast-message.show {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+.toast-message.hide {
+    opacity: 0;
+    transform: translateY(-20px);
+    /* Transition handles the fade-out, visibility change done by JS listener */
+}
+
+
+/* Specific styles for different message types */
+.toast-message.success {
+    background-color: #4CAF50; /* Green */
+}
+
+.toast-message.error {
+    background-color: #f44336; /* Red */
+}
+
+.toast-message.warning {
+    background-color: #ff9800; /* Orange */
+}
+
+.toast-message.info {
+    background-color: #2196F3; /* Blue */
+}
 
 
 .tick_container {
@@ -291,8 +359,7 @@ form {
 .signup-button-section{
     display: flex;
     align-items: center;
-    gap: 10px;
-    justify-content: space-around;
+    justify-content: space-between;
     /* border: 2px solid red; */
     margin-top: 18px;
     width: 100%;
@@ -322,7 +389,7 @@ form {
     font-size: 14px;
     color: #fff;
     font-weight: 600;
-    padding: 0 20px;
+    padding: 0 38px;
 }
 
 
@@ -345,12 +412,12 @@ form {
 }
 
 .container.active .toggle-box::before {
-    left: 50%;
+    left: 45%;
 }
 
 .toggle-panel {
     position: absolute;
-    width: 50%;
+    width: 45%;
     height: 100%;
     color: #fff;
     display: flex;
@@ -402,7 +469,7 @@ form {
 }
 
 .toggle-panel.toggle-right {
-    right: -50%;
+    right: -40%;
     transition-delay: .6s;
     z-index: 1;
 }
@@ -485,6 +552,7 @@ form {
     height: 180px;
     overflow: hidden;
     /* border: 2px solid red; */
+    margin-bottom: 20px;
 }
 
 #wolf-body-left,
