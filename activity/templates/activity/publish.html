@@ -1,15 +1,11 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Create New Post - Zero</title>
+    <title>{% if is_edit_mode %}Edit Post{% else %}Create New Post{% endif %} - Zero</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         #drop-area.drag-over {
             border-color: #026181;
@@ -17,8 +13,9 @@
         }
         .thumbnail {
             scroll-snap-align: start;
-            cursor: grab; /* Changed back to grab for better UX */
-            transition: transform 0.1s ease-out; /* Smooth transition for dragging effect */
+            cursor: grab;
+            transition: transform 0.1s ease-out;
+            position: relative;
         }
         .thumbnail-container {
             scroll-snap-type: x mandatory;
@@ -32,318 +29,759 @@
             background-color: rgba(2,97,129,0.1);
             box-shadow: 0 0 5px rgba(2,97,129,0.5);
         }
+        .publish-preview video {
+            pointer-events: none !important;
+            cursor: default !important;
+        }
+        .publish-preview .carousel-item {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+        .publish-preview .carousel-item img,
+        .publish-preview .carousel-item video {
+            object-fit: contain !important;
+        }
+        .publish-preview .carousel-container video {
+            position: relative;
+        }
+        .notification {
+            transition: opacity 0.3s ease-out;
+        }
+        .thumbnail.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #026181;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            transform: translate(-50%, -50%);
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
-
     <section id="publish" class="container mx-auto px-4 py-6">
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <div class="p-6">
-                <h2 class="text-2xl font-bold text-[#026181] mb-6">Create New Post</h2>
-                <form method="post" enctype="multipart/form-data">
+                <h2 class="text-2xl font-bold text-[#026181] mb-6">
+                    {% if is_edit_mode %}Edit Post{% else %}Create New Post{% endif %}
+                </h2>
+                {% if is_edit_mode %}
+                    <form method="post" enctype="multipart/form-data" action="{% url 'edit_post' post.id %}">
+                {% else %}
+                    <form method="post" enctype="multipart/form-data" action="{% url 'publish' %}">
+                {% endif %}
                     {% csrf_token %}
+                    <input type="hidden" id="removed-media" name="removed_media" value="">
+                    <input type="hidden" id="media-order" name="media_order" value="">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
                         <div>
-                            <div
-                                id="drop-area"
-                                class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-6 transition"
-                            >
-                                <i
-                                    class="fas fa-cloud-upload-alt text-4xl text-[#026181] mb-4"
-                                ></i>
-                                <p class="text-lg font-medium mb-2">
-                                    Drag & Drop your images here
-                                </p>
+                            <div id="drop-area" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-6 transition">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-[#026181] mb-4"></i>
+                                <p class="text-lg font-medium mb-2">Drag & Drop your images here</p>
                                 <p class="text-gray-500 mb-4">or</p>
-                                <input
-                                    type="file"
-                                    id="fileInput"
-                                    name="images"
-                                    class="hidden"
-                                    accept="image/*"
-                                    multiple
-                                />
-                                <button
-                                    type="button"
-                                    id="selectFilesBtn"
-                                    class="px-4 py-2 bg-[#026181] text-white rounded-md hover:bg-[#014d68] transition"
-                                >
-                                    Select Files
+                                <input type="file" id="fileInput" name="media" class="hidden" accept="image/*,video/*" multiple />
+                                <button type="button" id="selectFilesBtn" class="px-4 py-2 bg-[#026181] text-white rounded-md hover:bg-[#014d68] transition">
+                                    Select {% if is_edit_mode %}Additional {% endif %}Files
                                 </button>
                             </div>
-
-                            <div
-                                id="thumbnail-container"
-                                class="flex overflow-x-auto space-x-2 mt-4 mb-6 thumbnail-container"
-                            ></div>
-
+                            <div id="thumbnail-container" class="flex overflow-x-auto space-x-2 mb-6 thumbnail-container"></div>
                             <div class="mb-6">
-                                <label
-                                    for="caption"
-                                    class="block text-sm font-medium text-gray-700 mb-2"
-                                    >Caption</label
-                                >
-                                <textarea
-                                    id="caption"
-                                    name="caption"
-                                    rows="4"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#026181]"
-                                    placeholder="Write your caption here..."
-                                ></textarea>
+                                <label for="caption" class="block text-sm font-medium text-gray-700 mb-2">Caption</label>
+                                <textarea id="caption" name="caption" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#026181]" placeholder="Write your caption here..." maxlength="300">{% if caption %}{{ caption|escape }}{% elif is_edit_mode %}{{ post.caption|escape }}{% endif %}</textarea>
                                 <div class="text-right text-sm text-gray-500 mt-1">
-                                    <span id="wordCount">0</span>/300
+                                    <span id="wordCount">{% if caption %}{{ caption|length }}{% elif is_edit_mode %}{{ post.caption|length }}{% else %}0{% endif %}</span>/300
                                 </div>
                             </div>
-
                             <div class="mb-6">
-                                <label
-                                    for="category"
-                                    class="block text-sm font-medium text-gray-700 mb-2"
-                                    >Category (optional)</label
-                                >
-                                <select
-                                    id="category"
-                                    name="category"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#026181]"
-                                >
-                                    <option value="">No Category</option>
-                                    <option value="Art">Art</option>
-                                    <option value="Food">Food</option>
-                                    <option value="Travel">Travel</option>
-                                    <option value="Photography">Photography</option>
-                                    <option value="Design">Design</option>
+                                <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Category (optional)</label>
+                                <select id="category" name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#026181]">
+                                    <option value="" {% if not category and not is_edit_mode %}selected{% endif %}>No Category</option>
+                                    <option value="Art" {% if category == 'Art' or is_edit_mode and post.category == 'Art' %}selected{% endif %}>Art</option>
+                                    <option value="Food" {% if category == 'Food' or is_edit_mode and post.category == 'Food' %}selected{% endif %}>Food</option>
+                                    <option value="Travel" {% if category == 'Travel' or is_edit_mode and post.category == 'Travel' %}selected{% endif %}>Travel</option>
+                                    <option value="Photography" {% if category == 'Photography' or is_edit_mode and post.category == 'Photography' %}selected{% endif %}>Photography</option>
+                                    <option value="Design" {% if category == 'Design' or is_edit_mode and post.category == 'Design' %}selected{% endif %}>Design</option>
+                                    <option value="general" {% if category == 'general' or is_edit_mode and post.category == 'general' %}selected{% endif %}>General</option>
+                                    <option value="tech" {% if category == 'tech' or is_edit_mode and post.category == 'tech' %}selected{% endif %}>Tech</option>
                                 </select>
                             </div>
                         </div>
-
                         <div>
                             <h3 class="text-lg font-medium mb-4">Post Preview</h3>
                             <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
-                                <div
-                                    id="post-preview"
-                                    class="p-4 text-center text-gray-500 min-h-[300px]"
-                                >
+                                <div id="post-preview" class="publish-preview p-4 text-center text-gray-500 min-h-[300px]">
                                     Your post preview will appear here
                                 </div>
                             </div>
                             <div class="mt-6 text-right">
-                                <button
-                                    type="submit"
-                                    id="publishBtn"
-                                    class="px-6 py-2 bg-[#026181] text-white rounded-md hover:bg-[#014d68] transition font-medium disabled:opacity-50"
-                                    disabled
-                                >
-                                    Publish
+                                <button type="submit" id="publishBtn" class="px-6 py-2 bg-[#026181] text-white rounded-md hover:bg-[#014d68] transition font-medium disabled:opacity-50">
+                                    {% if is_edit_mode %}Update Post{% else %}Publish{% endif %}
                                 </button>
                             </div>
                         </div>
-
                     </div>
                 </form>
             </div>
         </div>
     </section>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const dropArea = document.getElementById("drop-area");
-            const fileInput = document.getElementById("fileInput");
-            const selectBtn = document.getElementById("selectFilesBtn");
-            const thumbs = document.getElementById("thumbnail-container");
-            const caption = document.getElementById("caption");
-            const wordCount = document.getElementById("wordCount");
-            const category = document.getElementById("category");
-            const preview = document.getElementById("post-preview");
-            const publishBtn = document.getElementById("publishBtn");
-            let files = [];
+<script>
+function showNotification(message, type = 'error') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-md text-white ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} notification`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
 
-            // Drag/Drop for File Upload on main drop area
-            ["dragenter", "dragover", "dragleave", "drop"].forEach(evt => {
-                dropArea.addEventListener(evt, e => {
-                    e.preventDefault(); e.stopPropagation();
-                });
-            });
-            ["dragenter", "dragover"].forEach(evt => {
-                dropArea.addEventListener(evt, () => dropArea.classList.add("drag-over"));
-            });
-            ["dragleave", "drop"].forEach(evt => {
-                dropArea.addEventListener(evt, () => dropArea.classList.remove("drag-over"));
-            });
-            dropArea.addEventListener("drop", e => handleFiles(e.dataTransfer.files));
-            selectBtn.addEventListener("click", () => fileInput.click());
-            fileInput.addEventListener("change", () => handleFiles(fileInput.files));
-
-            // Handle Files and Update Thumbnails
-            function handleFiles(list) {
-                // Convert FileList to Array and filter out non-images or duplicates (optional, but good practice)
-                const newFiles = [...list].filter(file => file.type.startsWith('image/'));
-                files = files.concat(newFiles);
-                updateThumbnails();
-                updatePreview();
-                publishBtn.disabled = !files.length;
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
             }
+        }
+    }
+    return cookieValue;
+}
+const csrfToken = getCookie('csrftoken');
 
-            function updateThumbnails() {
-                thumbs.innerHTML = ""; // Clear existing thumbnails
-                files.forEach((f, i) => {
-                    const div = document.createElement("div");
-                    div.className = "thumbnail flex-shrink-0 w-20 h-20 relative mr-2";
-                    div.draggable = true; // Enable dragging
-                    // No need for dataset.index here as we'll find index dynamically
-
-                    const img = document.createElement("img");
-                    img.className = "w-full h-full object-cover rounded";
-                    const reader = new FileReader();
-                    reader.onload = e => (img.src = e.target.result);
-                    reader.readAsDataURL(f);
-
-                    const btn = document.createElement("button");
-                    btn.innerHTML = '<i class="fas fa-times"></i>';
-                    btn.className = "absolute -top-0 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center cursor-pointer";
-                    btn.addEventListener("click", (event) => {
-                        event.stopPropagation(); // Prevent dragstart if clicking delete button
-                        const clickedThumbnail = event.target.closest(".thumbnail");
-                        if (clickedThumbnail) {
-                            const currentThumbnailIndex = Array.from(thumbs.children).indexOf(clickedThumbnail);
-                            if (currentThumbnailIndex > -1) {
-                                files.splice(currentThumbnailIndex, 1); // Remove the file from the array
-                                updateThumbnails(); // Re-render thumbnails and re-attach events
-                                updatePreview();
-                                publishBtn.disabled = !files.length;
-                            }
-                        }
-                    });
-
-                    div.append(img, btn);
-                    thumbs.append(div);
-                });
-                addDragEvents(); // Re-attach drag events to new/updated thumbnails
-            }
-
-            // Drag and Drop Reordering Logic
-            let draggedItem = null; // Stores the actual DOM element being dragged
-
-            function addDragEvents() {
-                const thumbnails = thumbs.querySelectorAll(".thumbnail");
-                thumbnails.forEach(thumb => {
-                    thumb.addEventListener("dragstart", dragStart);
-                    thumb.addEventListener("dragover", dragOver);
-                    thumb.addEventListener("dragleave", dragLeave);
-                    thumb.addEventListener("drop", drop);
-                    thumb.addEventListener("dragend", dragEnd);
-                });
-            }
-
-            function dragStart(e) {
-                // Ensure we are dragging the thumbnail div, not a child element
-                draggedItem = e.target.closest(".thumbnail");
-                if (!draggedItem) return; // Should not happen if event listener is on thumbnail itself
-
-                e.dataTransfer.effectAllowed = "move";
-                // Optionally set data (not strictly needed for reordering within same parent)
-                e.dataTransfer.setData("text/html", ""); // Required for Firefox sometimes
-
-                // Add a class to the dragged item for visual feedback
-                draggedItem.classList.add("dragging");
-            }
-
-            function dragOver(e) {
-                e.preventDefault(); // Essential to allow a drop
-                e.dataTransfer.dropEffect = "move";
-
-                const dropTarget = e.target.closest(".thumbnail");
-                // Only apply drag-over-target if it's a different thumbnail
-                if (dropTarget && dropTarget !== draggedItem) {
-                    // Remove class from previously hovered thumbnails
-                    thumbs.querySelectorAll(".thumbnail.drag-over-target").forEach(t => t.classList.remove("drag-over-target"));
-                    dropTarget.classList.add("drag-over-target");
-                }
-            }
-
-            function dragLeave(e) {
-                // Remove visual feedback when leaving a thumbnail
-                e.target.closest(".thumbnail")?.classList.remove("drag-over-target");
-            }
-
-            function drop(e) {
-                e.preventDefault();
-
-                const dropTarget = e.target.closest(".thumbnail");
-                // Remove drag-over-target class from all thumbnails after drop attempt
-                thumbs.querySelectorAll(".thumbnail.drag-over-target").forEach(t => t.classList.remove("drag-over-target"));
-
-                if (dropTarget && draggedItem && draggedItem !== dropTarget) {
-                    const draggedIndex = Array.from(thumbs.children).indexOf(draggedItem);
-                    const dropIndex = Array.from(thumbs.children).indexOf(dropTarget);
-
-                    // Reorder the 'files' array based on the visual DOM order
-                    const draggedFile = files[draggedIndex];
-                    files.splice(draggedIndex, 1); // Remove from old position
-                    files.splice(dropIndex, 0, draggedFile); // Insert into new position
-
-                    // Directly reorder the DOM elements for a smoother visual effect
-                    if (draggedIndex < dropIndex) {
-                        thumbs.insertBefore(draggedItem, dropTarget.nextSibling);
-                    } else {
-                        thumbs.insertBefore(draggedItem, dropTarget);
-                    }
-
-                    // After DOM reordering, simply update the preview as the files array is reordered
-                    updatePreview();
-
-                    // No need to call updateThumbnails() here, as we've directly manipulated DOM and files array.
-                    // Calling it would re-render everything, potentially causing a flicker.
-                    // The dragEnd will handle removing the 'dragging' class.
-                }
-            }
-
-            function dragEnd(e) {
-                if (draggedItem) {
-                    draggedItem.classList.remove("dragging");
-                }
-                // Ensure all drag-over-target classes are removed
-                thumbs.querySelectorAll(".thumbnail.drag-over-target").forEach(thumb => {
-                    thumb.classList.remove("drag-over-target");
-                });
-                draggedItem = null; // Clear the dragged item reference
-            }
-
-            // Live Preview (only shows the first image)
-            function updatePreview() {
-                if (!files.length) {
-                    preview.innerHTML = "Your post preview will appear here";
-                    return;
-                }
-                const first = files[0];
-                const reader = new FileReader();
-                reader.onload = e => {
-                    preview.innerHTML = `
-                        <div class="post-container flex flex-col lg:flex-row">
-                            <div class="image-section lg:w-1/2 h-64 overflow-hidden relative">
-                                <div class="blur-bg" style="background:url(${e.target.result});filter:blur(10px);opacity:0.7;"></div>
-                                <img src="${e.target.result}" class="w-full h-full object-contain" />
-                            </div>
-                            <div class="content-section lg:w-1/2 p-4">
-                                <p class="mb-4">${caption.value || '<span class="text-gray-400">Caption will appear here</span>'}</p>
-                                ${category.value
-                                    ? `<span class="inline-block bg-[#026181] text-white text-xs px-2 py-1 rounded">${category.value}</span>`
-                                    : ""
-                                }
-                            </div>
-                        </div>`;
-                };
-                reader.readAsDataURL(first);
-            }
-
-            // Word Count for Caption
-            caption.addEventListener("input", () => {
-                const len = caption.value.length;
-                wordCount.textContent = len;
-                updatePreview(); // Update preview as caption changes
-            });
-            category.addEventListener("change", updatePreview); // Update preview if category changes
+async function generateServerThumbnail(file) {
+    const formData = new FormData();
+    formData.append('video', file);
+    try {
+        const response = await fetch('/activity/generate-thumbnail/', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': csrfToken }
         });
-    </script>
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.thumbnail_url) {
+            return data.thumbnail_url;
+        } else {
+            throw new Error(data.error || 'Thumbnail generation failed');
+        }
+    } catch (error) {
+        console.error('Thumbnail generation error:', error);
+        showNotification(`Failed to generate thumbnail for ${file.name}: ${error.message}`);
+        return null;
+    }
+}
+
+
+async function deleteThumbnail(thumbnailUrl) {
+    if (!thumbnailUrl) return;
+    const thumbnailPath = new URL(thumbnailUrl, window.location.origin).pathname.replace(/^\/media\//, '');
+    try {
+        const response = await fetch('/activity/delete-thumbnail/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ thumbnail_path: thumbnailPath }),
+        });
+        const data = await response.json();
+        if (!data.success) {
+            console.error('Failed to delete thumbnail:', data.error);
+            showNotification(`Failed to delete thumbnail: ${data.error}`);
+        } else {
+            console.log('Thumbnail deleted:', thumbnailPath);
+        }
+    } catch (error) {
+        console.error('Error deleting thumbnail:', error);
+        showNotification('Failed to delete thumbnail');
+    }
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const validTypes = ['image/jpeg', 'image/png', 'video/mp4', 'video/webm'];
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    const MAX_FILES = 10;
+
+    function initializePreviewVideos() {
+        const isPreviewPage = document.querySelector('.publish-preview') !== null;
+        if (isPreviewPage) {
+            console.log('Preview mode detected - disabling video playback');
+            const disablePreviewVideos = () => {
+                const previewVideos = document.querySelectorAll('.publish-preview video');
+                previewVideos.forEach(video => {
+                    video.preload = 'none';
+                    video.autoplay = false;
+                    video.controls = false;
+                    video.muted = true;
+                    video.removeAttribute('autoplay');
+                    video.pause();
+                    video.currentTime = 0;
+                    video.addEventListener('play', (e) => {
+                        e.preventDefault();
+                        video.pause();
+                        video.currentTime = 0;
+                        console.log('Prevented video play in preview mode');
+                    });
+                    video.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+            };
+            disablePreviewVideos();
+            const observer = new MutationObserver(() => {
+                disablePreviewVideos();
+            });
+            const previewContainer = document.querySelector('.publish-preview');
+            if (previewContainer) {
+                observer.observe(previewContainer, { childList: true, subtree: true });
+            }
+        }
+    }
+    
+    initializePreviewVideos();
+
+    const dropArea = document.getElementById("drop-area");
+    const fileInput = document.getElementById("fileInput");
+    const selectBtn = document.getElementById("selectFilesBtn");
+    const thumbs = document.getElementById("thumbnail-container");
+    const caption = document.getElementById("caption");
+    const wordCount = document.getElementById("wordCount");
+    const category = document.getElementById("category");
+    const preview = document.getElementById("post-preview");
+    const publishBtn = document.getElementById("publishBtn");
+    const removedMediaInput = document.getElementById("removed-media");
+    const form = document.querySelector("form");
+    
+    let mediaOrder = [];
+    let removedMediaIds = [];
+    let cachedFileURLs = [];
+    let currentPreviewIndex = 0;
+    const isEditMode = {% if is_edit_mode %}true{% else %}false{% endif %};
+    
+    if (isEditMode) {
+        {% if existing_media %}
+            {% for media in existing_media %}
+                mediaOrder.push({
+                    type: 'existing',
+                    data: {
+                        id: '{{ media.id }}',
+                        url: '{{ media.file.url }}',
+                        {% if media.thumbnail %}
+                        thumbnailUrl: '{{ media.thumbnail.url }}',
+                        {% endif %}
+                        mediaType: '{% if media.file.url|slice:"-4:" == ".mp4" or media.file.url|slice:"-5:" == ".webm" %}video{% else %}image{% endif %}'
+                    }
+                });
+            {% endfor %}
+        {% endif %}
+        updateThumbnails();
+        updatePreview();
+    }
+
+    ["dragenter", "dragover", "dragleave", "drop"].forEach(evt => {
+        dropArea.addEventListener(evt, e => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+
+    ["dragenter", "dragover"].forEach(evt => {
+        dropArea.addEventListener(evt, () => dropArea.classList.add("drag-over"));
+    });
+
+    ["dragleave", "drop"].forEach(evt => {
+        dropArea.addEventListener(evt, () => dropArea.classList.remove("drag-over"));
+    });
+
+    dropArea.addEventListener("drop", e => handleFiles(e.dataTransfer.files));
+    selectBtn.addEventListener("click", () => {
+        fileInput.value = null;
+        fileInput.click();
+    });
+    fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+
+    async function handleFiles(list) {
+    const totalFiles = mediaOrder.length + list.length;
+    if (totalFiles > MAX_FILES) {
+        showNotification(`Cannot upload more than ${MAX_FILES} files.`);
+        return;
+    }
+
+    const newFiles = [];
+    for (const file of list) {
+        if (!validTypes.includes(file.type)) {
+            showNotification(`Unsupported file type for ${file.name}. Only JPEG, PNG, MP4, and WebM are allowed.`);
+            return;
+        }
+        if (file.size > maxSize) {
+            showNotification(`File too large: ${file.name}. Max size is 100MB.`);
+            return;
+        }
+        newFiles.push(file);
+    }
+
+    for (const file of newFiles) {
+        let thumbnailUrl = null;
+        const tempIndex = mediaOrder.length;
+        mediaOrder.push({
+            type: 'new',
+            data: file,
+            thumbnailUrl: null,
+            isLoading: true
+        });
+        updateThumbnails();
+        if (file.type.startsWith('video/')) {
+            thumbnailUrl = await generateServerThumbnail(file);
+            if (!thumbnailUrl) {
+                mediaOrder.splice(tempIndex, 1);
+                updateThumbnails();
+                continue;
+            }
+            mediaOrder[tempIndex].thumbnailUrl = thumbnailUrl;
+        }
+        mediaOrder[tempIndex].isLoading = false;
+        updateThumbnails();
+    }
+
+    // Update thumbnail inputs with final indices
+    form.querySelectorAll('input[name^="thumbnail_for_new_"]').forEach(input => input.remove());
+    let newFileIndex = 0;
+    mediaOrder.forEach((item, index) => {
+        if (item.type === 'new' && item.thumbnailUrl) {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = `thumbnail_for_new_${newFileIndex}`;
+            hidden.value = new URL(item.thumbnailUrl, window.location.origin).pathname.replace(/^\/media\//, '');
+            form.appendChild(hidden);
+            newFileIndex++;
+        }
+    });
+
+    updateFileInput();
+    updatePublishButton();
+    cachedFileURLs = [];
+    currentPreviewIndex = 0;
+    cleanupBlobURLs();
+    updatePreview();
+}
+    function updateThumbnails() {
+        console.log('🔄 updateThumbnails running...');
+        thumbs.innerHTML = "";
+        mediaOrder.forEach((item, index) => {
+            const div = document.createElement("div");
+            div.className = `thumbnail flex-shrink-0 w-20 h-20 relative mr-2 ${item.isLoading ? 'loading' : ''}`;
+            div.draggable = !item.isLoading;
+            div.dataset.index = index;
+
+            if (item.type === 'existing') {
+                if (item.data.mediaType === 'video') {
+                    const thumbnailImg = document.createElement("img");
+                    thumbnailImg.className = "w-full h-full object-cover rounded border-2 border-[#026181]";
+                    thumbnailImg.src = item.data.thumbnailUrl || '/static/placeholder.jpg';
+                    const overlay = document.createElement("div");
+                    overlay.className = "absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded";
+                    overlay.innerHTML = '<i class="fas fa-play text-white text-lg"></i>';
+                    div.appendChild(thumbnailImg);
+                    div.appendChild(overlay);
+                } else {
+                    const img = document.createElement("img");
+                    img.src = item.data.url;
+                    img.className = "w-full h-full object-cover rounded border-2 border-[#026181]";
+                    div.appendChild(img);
+                }
+            } else {
+                const file = item.data;
+                if (file.type.startsWith('video/')) {
+                    console.log('🎬 Displaying video thumbnail for:', file.name);
+                    const thumbnailImg = document.createElement("img");
+                    thumbnailImg.className = "w-full h-full object-cover rounded border-2 border-[#026181]";
+                    if (item.thumbnailUrl) {
+                        thumbnailImg.src = item.thumbnailUrl;
+                    } else if (!item.isLoading) {
+                        const placeholder = document.createElement("div");
+                        placeholder.className = "w-full h-full bg-gray-200 flex items-center justify-center rounded border-2 border-[#026181]";
+                        placeholder.innerHTML = '<i class="fas fa-video text-gray-600 text-2xl"></i>';
+                        div.appendChild(placeholder);
+                    }
+                    const overlay = document.createElement("div");
+                    overlay.className = "absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded";
+                    overlay.innerHTML = '<i class="fas fa-play text-white text-lg"></i>';
+                    if (item.thumbnailUrl) {
+                        div.appendChild(thumbnailImg);
+                    }
+                    div.appendChild(overlay);
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        const img = document.createElement("img");
+                        img.src = e.target.result;
+                        img.className = "w-full h-full object-cover rounded border-2 border-[#026181]";
+                        div.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            if (!item.isLoading) {
+                const btn = document.createElement("button");
+                btn.innerHTML = '<i class="fas fa-times"></i>';
+                btn.className = "absolute -top-0 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center cursor-pointer";
+                btn.type = "button";
+                btn.addEventListener("click", async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const thumbnailIndex = parseInt(div.dataset.index);
+                    if (thumbnailIndex > -1) {
+                        const removedItem = mediaOrder[thumbnailIndex];
+                        if (removedItem.type === 'existing') {
+                            removedMediaIds.push(removedItem.data.id);
+                            removedMediaInput.value = removedMediaIds.join(',');
+                        } else if (removedItem.type === 'new' && removedItem.thumbnailUrl) {
+                            await deleteThumbnail(removedItem.thumbnailUrl);
+                        }
+                        mediaOrder.splice(thumbnailIndex, 1);
+                        // Update thumbnail inputs
+                        form.querySelectorAll('input[name^="thumbnail_for_new_"]').forEach(input => input.remove());
+                        let newFileIndex = 0;
+                        mediaOrder.forEach((item, index) => {
+                            if (item.type === 'new' && item.thumbnailUrl) {
+                                const hidden = document.createElement('input');
+                                hidden.type = 'hidden';
+                                hidden.name = `thumbnail_for_new_${newFileIndex}`;
+                                hidden.value = new URL(item.thumbnailUrl, window.location.origin).pathname.replace(/^\/media\//, '');
+                                form.appendChild(hidden);
+                                newFileIndex++;
+                            }
+                        });
+                        updateThumbnails();
+                        updateFileInput();
+                        cleanupBlobURLs();
+                        updatePreview();
+                        updatePublishButton();
+                    }
+                });
+                div.appendChild(btn);
+            }
+            thumbs.appendChild(div);
+        });
+        setTimeout(() => {
+            addDragEvents();
+        }, 50);
+    }
+
+    function updateFileInput() {
+        const dt = new DataTransfer();
+        mediaOrder.forEach(item => {
+            if (item.type === 'new') {
+                dt.items.add(item.data);
+            }
+        });
+        fileInput.files = dt.files;
+    }
+
+    let draggedItem = null;
+    let draggedIndex = null;
+
+    function addDragEvents() {
+        const thumbnails = thumbs.querySelectorAll(".thumbnail:not(.loading)");
+        thumbnails.forEach(thumb => {
+            thumb.removeEventListener("dragstart", dragStart);
+            thumb.removeEventListener("dragover", dragOver);
+            thumb.removeEventListener("dragleave", dragLeave);
+            thumb.removeEventListener("drop", drop);
+            thumb.removeEventListener("dragend", dragEnd);
+            thumb.addEventListener("dragstart", dragStart);
+            thumb.addEventListener("dragover", dragOver);
+            thumb.addEventListener("dragleave", dragLeave);
+            thumb.addEventListener("drop", drop);
+            thumb.addEventListener("dragend", dragEnd);
+        });
+    }
+
+    function dragStart(e) {
+        draggedItem = e.target.closest(".thumbnail");
+        if (!draggedItem) return;
+        draggedIndex = parseInt(draggedItem.dataset.index);
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/html", "");
+        draggedItem.classList.add("dragging");
+    }
+
+    function dragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        const dropTarget = e.target.closest(".thumbnail");
+        if (dropTarget && dropTarget !== draggedItem) {
+            thumbs.querySelectorAll(".thumbnail.drag-over-target").forEach(t => t.classList.remove("drag-over-target"));
+            dropTarget.classList.add("drag-over-target");
+        }
+    }
+
+    function dragLeave(e) {
+        const thumbnail = e.target.closest(".thumbnail");
+        if (thumbnail) {
+            thumbnail.classList.remove("drag-over-target");
+        }
+    }
+
+    function drop(e) {
+        e.preventDefault();
+        const dropTarget = e.target.closest(".thumbnail");
+        thumbs.querySelectorAll(".thumbnail.drag-over-target").forEach(t => t.classList.remove("drag-over-target"));
+        if (dropTarget && draggedItem && draggedItem !== dropTarget && draggedIndex !== undefined) {
+            const dropIndex = parseInt(dropTarget.dataset.index);
+            if (dropIndex !== undefined) {
+                const draggedMedia = mediaOrder[draggedIndex];
+                mediaOrder.splice(draggedIndex, 1);
+                mediaOrder.splice(dropIndex, 0, draggedMedia);
+                updateThumbnails();
+                updateFileInput();
+                cleanupBlobURLs();
+                cachedFileURLs = [];
+                currentPreviewIndex = 0;
+                updatePreview();
+            }
+        }
+    }
+
+    function dragEnd(e) {
+        if (draggedItem) {
+            draggedItem.classList.remove("dragging");
+        }
+        draggedItem = null;
+        draggedIndex = null;
+    }
+
+    function updatePublishButton() {
+        const hasContent = mediaOrder.length > 0;
+        publishBtn.disabled = !hasContent && !isEditMode;
+    }
+
+    function cleanupBlobURLs() {
+        cachedFileURLs.forEach(url => {
+            URL.revokeObjectURL(url);
+        });
+        cachedFileURLs = [];
+        console.log('🧹 Cleaned up preview URLs');
+    }
+
+    function cleanupAllURLs() {
+        cachedFileURLs.forEach(url => URL.revokeObjectURL(url));
+        cachedFileURLs = [];
+        console.log('🧹 Cleaned up ALL URLs');
+    }
+
+    function updatePreview() {
+        cleanupBlobURLs();
+        const allMedia = mediaOrder.map(item => {
+            if (item.type === 'existing') {
+                return {
+                    type: item.data.mediaType,
+                    url: item.data.url,
+                    isExisting: true
+                };
+            } else {
+                const file = item.data;
+                const url = URL.createObjectURL(file);
+                cachedFileURLs.push(url);
+                return {
+                    type: file.type.startsWith('video/') ? 'video' : 'image',
+                    url: url,
+                    isExisting: false
+                };
+            }
+        });
+
+        if (!allMedia.length) {
+            preview.innerHTML = "Your post preview will appear here";
+            return;
+        }
+
+        let mediaElements = '';
+        allMedia.forEach((fileData, index) => {
+            if (fileData.type === 'video') {
+                mediaElements += `
+                    <div class="carousel-item" style="position: relative; display: ${index === 0 ? 'block' : 'none'}; width: 100%; height: 100%;">
+                        <video style="width: 100%; height: 100%; object-fit: contain;" muted preload="metadata">
+                            <source src="${fileData.url}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 12px; font-size: 10px; pointer-events: none;">
+                            <i class="fas fa-video"></i> Video
+                        </div>
+                    </div>
+                `;
+            } else {
+                mediaElements += `
+                    <div class="carousel-item" style="position: relative; display: ${index === 0 ? 'block' : 'none'}; width: 100%; height: 100%;">
+                        <img src="${fileData.url}" style="width: 100%; height: 100%; object-fit: contain;" alt="Preview ${index + 1}">
+                    </div>
+                `;
+            }
+        });
+
+        const showNavigation = allMedia.length > 1;
+        const navigationButtons = showNavigation ? `
+            <button type="button" class="carousel-btn prev" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; z-index: 10;" onclick="changePreviewMedia(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button type="button" class="carousel-btn next" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; z-index: 10;" onclick="changePreviewMedia(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        ` : '';
+
+        preview.innerHTML = `
+            <div class="activity-post" style="border: 1px solid #e1e8ed; border-radius: 8px; padding: 20px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); display: flex; gap: 15px; align-items: stretch; background: white;">
+                <div class="activity-post-left-section" style="flex: 0.6; height: 300px; border-radius: 8px; background-color: #f5f5f5; overflow: hidden; position: relative;">
+                    <div class="activity-post-images carousel-container" style="position: relative; width: 100%; height: 100%;">
+                        ${mediaElements}
+                        ${navigationButtons}
+                    </div>
+                </div>
+                <div class="activity-post-right-section" style="flex: 0.4; border: 1px solid #026181; border-radius: 8px; position: relative; display: flex; flex-direction: column; height: 300px; overflow: hidden; background-color: #E1E8ED;">
+                    <div class="activity-post-header" style="display: flex; background-color: #fff; align-items: center; margin-bottom: 0; border-radius: 8px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; padding: 10px; max-height: 50px;">
+                        <div class="activity-post-avatar" style="width: 20px; height: 20px; border-radius: 50%; background-color: #026181; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                            <i class="fas fa-user" style="color: white; font-size: 10px;"></i>
+                        </div>
+                        <div class="activity-post-author" style="font-size: 14px; font-weight: 600; color: #026181;">You</div>
+                        <div class="activity-post-time" style="font-size: 12px; color: #657786; margin-left: 8px;">Just now</div>
+                    </div>
+                    <div class="activity-post-container" style="background-color: #fff; padding: 10px; border-radius: 8px; border-top-left-radius: 0; border-top-right-radius: 0; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; height: 100%; position: relative; overflow: hidden;">
+                        <div class="activity-post-content" style="font-size: 14px; color: #1c2526; line-height: 1.4; margin-bottom: 12px; padding: 8px 0; flex-grow: 0; overflow-y: auto; word-wrap: break-word; max-height: 120px;">
+                            ${caption.value || '<span style="color: #9ca3af; font-style: italic;">Your caption will appear here...</span>'}
+                            ${category.value ? `<br><span style="background-color: #026181; color: white; padding: 2px 8px; border-radius: 15px; margin-top: 8px; font-size: 12px; display: inline-block;">${category.value}</span>` : ''}
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
+                            <button type="button" style="padding: 4px 8px; background-color: #f3f4f6; color: #374151; border-radius: 12px; font-size: 11px; border: none; cursor: pointer;">Well Done!</button>
+                            <button type="button" style="padding: 4px 8px; background-color: #f3f4f6; color: #374151; border-radius: 12px; font-size: 11px; border: none; cursor: pointer;">Congratulations!</button>
+                        </div>
+                        <div style="display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #f3f4f6; border-bottom: 1px solid #f3f4f6; padding: 6px 4px; margin-top: auto; gap: 2px;">
+                            <button type="button" style="display: flex; flex-direction: column; align-items: center; color: #6b7280; background: none; border: none; cursor: pointer; font-size: 10px; padding: 2px; flex: 1; text-align: center;">
+                                <i class="far fa-star" style="margin-bottom: 2px; font-size: 14px;"></i>
+                                <span style="font-size: 9px;">Star</span>
+                            </button>
+                            <button type="button" style="display: flex; flex-direction: column; align-items: center; color: #6b7280; background: none; border: none; cursor: pointer; font-size: 10px; padding: 2px; flex: 1; text-align: center;">
+                                <i class="far fa-comment" style="margin-bottom: 2px; font-size: 14px;"></i>
+                                <span style="font-size: 9px;">Comment</span>
+                            </button>
+                            <button type="button" style="display: flex; flex-direction: column; align-items: center; color: #6b7280; background: none; border: none; cursor: pointer; font-size: 10px; padding: 2px; flex: 1; text-align: center;">
+                                <i class="fas fa-link" style="margin-bottom: 2px; font-size: 14px;"></i>
+                                <span style="font-size: 9px;">Link-Up</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        setTimeout(() => {
+            const previewVideos = document.querySelectorAll('#post-preview video');
+            previewVideos.forEach(video => {
+                video.load();
+                video.addEventListener('loadedmetadata', () => {
+                    if (video.duration > 1) {
+                        video.currentTime = 1;
+                    } else {
+                        video.currentTime = video.duration / 2;
+                    }
+                });
+            });
+        }, 100);
+    }
+
+    function updatePreviewContent() {
+        const contentElement = document.querySelector('#post-preview .activity-post-content');
+        if (contentElement) {
+            contentElement.innerHTML = `
+                ${caption.value || '<span style="color: #9ca3af; font-style: italic;">Your caption will appear here...</span>'}
+                ${category.value ? `<br><span style="background-color: #026181; color: white; padding: 2px 8px; border-radius: 15px; margin-top: 8px; font-size: 12px; display: inline-block;">${category.value}</span>` : ''}
+            `;
+        } else {
+            updatePreview();
+        }
+    }
+
+    window.changePreviewMedia = function(direction) {
+        const mediaItems = document.querySelectorAll('#post-preview .carousel-item');
+        if (mediaItems.length <= 1) return;
+        if (mediaItems[currentPreviewIndex]) {
+            mediaItems[currentPreviewIndex].style.display = 'none';
+        }
+        currentPreviewIndex += direction;
+        if (currentPreviewIndex >= mediaItems.length) currentPreviewIndex = 0;
+        if (currentPreviewIndex < 0) currentPreviewIndex = mediaItems.length - 1;
+        if (mediaItems[currentPreviewIndex]) {
+            mediaItems[currentPreviewIndex].style.display = 'block';
+        }
+    }
+
+    form.addEventListener('submit', (e) => {
+        {% comment %} e.preventDefault(); {% endcomment %}
+  const mediaOrderInput   = document.getElementById('media-order');
+  const removedMediaInput = document.getElementById('removed-media');
+
+  // 1️⃣ build the media order CSV
+  let newFileCounter = 0;
+  const order = mediaOrder.map(item => {
+    if (item.type === 'existing') {
+      return `existing:${item.data.id}`;
+    } else {
+      return `new:${newFileCounter++}`;
+    }
+  });
+  mediaOrderInput.value = order.join(',');
+
+  // 2️⃣ build the removed-media CSV
+  //    (you’re already pushing IDs into removedMediaIds on thumbnail‑delete clicks)
+  removedMediaInput.value = removedMediaIds.join(',');
+
+  // 3️⃣ debug log both
+  console.log('SUBMIT ➔ media_order   =', mediaOrderInput.value);
+  console.log('SUBMIT ➔ removed_media =', removedMediaInput.value);
+
+  // 4️⃣ clean up preview URLs as you had
+  cleanupBlobURLs();
+});
+
+
+    window.addEventListener('beforeunload', cleanupAllURLs);
+
+    let captionUpdateTimeout;
+    caption.addEventListener("input", () => {
+        const len = caption.value.length;
+        wordCount.textContent = len;
+        if (len > 300) {
+            caption.value = caption.value.slice(0, 300);
+            wordCount.textContent = 300;
+        }
+        clearTimeout(captionUpdateTimeout);
+        captionUpdateTimeout = setTimeout(() => {
+            updatePreviewContent();
+        }, 150);
+    });
+
+    category.addEventListener("change", () => {
+        updatePreviewContent();
+    });
+
+    updatePublishButton();
+    updatePreview();
+});
+</script>
 </body>
 </html>

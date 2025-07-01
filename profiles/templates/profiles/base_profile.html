@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_timesince %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,9 +15,13 @@
     <nav class="navbar">
       <div class="user-section">
         <div class="profile-icon" id="profile-picture">
-          <i class="fas fa-user"></i>
+          {% if request.user.profile.profile_picture %}
+            <img src="{{ request.user.profile.profile_picture.url }}" alt="{{ request.user.first_name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+          {% else %}
+            <img src="{% static 'images/default-user.png' %}" alt="{{ request.user.first_name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+          {% endif %}
         </div>
-        <div class="user-name">
+                <div class="user-name">
           <span>{% block user_name %}Name{% endblock %}</span>
           <div class="dropdown">
             <button class="dropdown-btn"><i class="fas fa-caret-down"></i></button>
@@ -61,7 +66,7 @@
   </div>
 
   {% block profile_card %}
-  <div class="profile-card-wrapper">
+  {% comment %} <div class="profile-card-wrapper">
     <aside class="profile-card">
       <div class="card-content">
         <img src="{% static 'profiles/Images/brian.avif' %}" alt="Profile Image" class="card-image">
@@ -71,32 +76,51 @@
         <button class="share-button">Share Profile</button>
       </div>
     </aside>
-  </div>
+  </div> {% endcomment %}
   {% endblock %}
+  {% comment %} <div class="profile-upper-wrapper">
+    <div class="cover-picture">
+      {% block profile_header %}
+      <section class="profile-header">
+        <div class="profile-pic-wrapper">
+          <img src="{% static 'profiles/Images/brian.avif' %}" alt="Profile Picture" class="profile-pic">
 
-  <main class="profile-main">
-    {% block custom_milestone_section %}{% endblock %}
-    {% block profile_header %}
-    <section class="profile-header">
-      <div class="profile-pic-wrapper">
-        <img src="{% static 'profiles/Images/brian.avif' %}" alt="Profile Picture" class="profile-pic">
-        {% comment %} <div class="profile-pic-edit">
-          <i class="fas fa-image"></i>
-        </div> {% endcomment %}
+        </div>
+        <h1 class="profile-name">{% block profile_name %}Brian Griffin{% endblock %}</h1>
+        <p class="profile-role"><span class="role-highlight">{% block profile_role %}Investor{% endblock %}</span> | {% block profile_position %}Founder & CEO at Perter Corps{% endblock %}</p>
+      </section>
+      {% endblock %}
+
+      <div class="edit-cover-box">
+        <i class="fas fa-image"></i> Edit Cover Photo
       </div>
-      <h1 class="profile-name">{% block profile_name %}Brian Griffin{% endblock %}</h1>
-      <p class="profile-role"><span class="role-highlight">{% block profile_role %}Investor{% endblock %}</span> | {% block profile_position %}Founder & CEO at Perter Corps{% endblock %}</p>
-    </section>
-    {% endblock %}
+
+    </div>
+
+    <div class="edit-btns-section">
+      <div class="left-buttons">
+        <div class="edit-profile">
+          <i class="fas fa-pen"></i> Edit Profile
+        </div>
+        <div class="create-post">
+          <i class="fas fa-plus"></i> Create Post
+        </div>
+      </div>
+
+      <div class="verify-profile">
+        Verify Profile
+      </div>
+    </div>  
+  </div> {% endcomment %}
+
+  {% comment %} <main class="profile-main">
+    {% block custom_milestone_section %}{% endblock %}
 
     <div class="content-wrapper">
       {% block profile_content %}
       <section class="profile-story">
         <div class="section-header-with-edit">
           <h2 class="section-title">My Story</h2>
-          {% comment %} <button class="edit-button" title="Edit your story">
-            <i class="fas fa-pen"></i>
-          </button> {% endcomment %}
         </div>
         <p class="profile-description">
           {% block profile_description %}Born and raised in Kathmandu...{% endblock %}
@@ -134,21 +158,6 @@
         </div>
 
         <div class="intro-side">
-          {% comment %} {% block profile_video %}
-          <div class="profile-main-video-section">
-            <h2>Glimpse</h2>
-            <div class="profile-video-section-container">
-              <div class="profile-video-thumbnail" id="profile-thumbnail">
-                <img src="{% static 'profiles/Images/ZeroThumbnail.png' %}" alt="Video Thumbnail" id="profile-thumbnail-img">
-                <div class="profile-video-play-button" id="profile-play-button"></div>
-              </div>
-              <video controls id="profile-video">
-                <source src="{% static 'profiles/Images/TrialVideo2.mp4' %}" type="video/mp4">
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          </div>
-          {% endblock %} {% endcomment %}
           {% block profile_video %}
           {% if profile.video %}
             <div class="profile-main-video-section">
@@ -226,110 +235,15 @@
       </div>
       {% endblock %}
     </div>
-  </main>
-
-  {% comment %} {% block activity_post %}
-  <div class="activity-post">
-    <div class="activity-post-header">
-      <div class="activity-post-avatar">
-        <img src="{% static 'profiles/Images/brian.avif' %}" alt="{% block activity_post_author %}Brian Griffin{% endblock %}">
-      </div>
-      <div class="activity-post-author">{% block activity_post_author_name %}Brian Griffin{% endblock %}</div>
-      <div class="activity-post-time">{% block activity_post_time %}2 Hours ago{% endblock %}</div>
-      <div class="activity-post-more"></div>
-    </div>
-    <div class="activity-post-content">
-      {% block activity_post_content %}
-      Excited to announce our $2.5M seed round led by <a href="#">@VenturePartners</a>! We're revolutionizing sustainable packaging with our plant-based materials. Looking to expand our team with top engineering talent – reach out if you're passionate about making an environmental impact! <span class="hashtag">#Sustainability</span> <span class="hashtag">#GreenTech</span> <span class="hashtag">#Hiring</span>
-      {% endblock %}
-    </div>
-    <div class="activity-post-footer">
-      <div class="activity-post-stats">
-        <span class="icon"></span><span>{% block activity_post_likes %}25 Likes{% endblock %}</span>
-        <span class="comment-icon"></span><span>{% block activity_post_comments %}5 Comments{% endblock %}</span>
-        <span class="share-icon"></span><span>{% block activity_post_shares %}12 Shares{% endblock %}</span>
-      </div>
-      <div class="activity-post-actions">
-        <a href="#" class="like-action"><span class="action-icon"></span>Likes</a>
-        <a href="#" class="comment-action"><span class="action-icon"></span>Comment</a>
-        <a href="#" class="share-action"><span class="action-icon"></span>Share</a>
-        <a href="#" class="connect-action">Connect</a>
-      </div>
-    </div>
-  </div>
-  {% endblock %} {% endcomment %}
+  </main> {% endcomment %}
 
 
 
-  {% comment %} <div class="activity-post" data-post-id="post-1" style="border:2px solid none">
-    <div class="activity-post-left-section">
-      <div class="activity-post-images carousel-container">
-        <button class="carousel-btn prev" aria-label="Previous image">
-          <i class="fas fa-chevron-left carousel-icon"></i>
-        </button>
-        <div class="carousel-track">
-          <img class="carousel-item" src="https://lutris.net/media/games/screenshots/SanAndreas2.jpg" alt="Sustainable packaging prototype" data-index="0">
-          <img class="carousel-item" src="https://imgs.search.brave.com/q5QFn5zaXym-tHP4K9JmCfM9mYvRRPONTaviINcXX7w/rs:fit:0:180:1:0/g:ce/aHR0cHM6Ly93d3cu/aW1nLWNvcnAuY29t/L2ltYWdlcy9zbGlk/ZXMvY2l0aWVzL2lt/Zy10YWl3YW4uanBn" alt="Sustainable packaging prototype" data-index="1">
-          <img class="carousel-item" src="https://imgs.search.brave.com/VP6bhadxhTu3XJGhxpWaBIQmfeg-sykPeVRn3CsEBow/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pLnBp/bmltZy5jb20vb3Jp/Z2luYWxzLzFmLzNm/L2Y1LzFmM2ZmNWM2/MDU4MzcyZTkyNmFh/MWQyOTQ1ZTExYWE3/LmpwZw" alt="Sustainable packaging prototype" data-index="2">
-        </div>
-        <button class="carousel-btn next" aria-label="Next image">
-          <i class="fas fa-chevron-right carousel-icon"></i>
-        </button>
-      </div>
-    </div>
-    <div class="activity-post-right-section"  style="border:2px solid none">
-      <div class="activity-post-header" style="border:2px solid none">
-        <div class="activity-post-avatar">
-        </div>
-        <div class="activity-post-author">Brian Griffin</div>
-        <div class="activity-post-time">2 Hours ago</div>
-        <div class="activity-post-more" aria-label="More options"></div>
-      </div>
-      <div class="activity-post-container" style="border:2px solid none">
-        <div class="activity-post-content" style="border:2px solid none">
-          Excited to announce our $2.5M seed round led by <a href="#">@VenturePartners</a>! We're revolutionizing sustainable packaging with our plant-based materials. Looking to expand our team with top engineering talent – reach out if you're passionate about making an environmental impact! <span class="hashtag">#Sustainability</span> <span class="hashtag">#GreenTech</span> <span class="hashtag">#Hiring</span>
-        </div>
-        <div class="flex items-center justify-between border-t border-b border-gray-100 py-3 my-0 px-4">
-          <button class="flex items-center text-gray-500 hover:text-yellow-500"><i class="far fa-star mr-1 relative bottom-[2px]"></i> Star</button>
-          <button class="flex items-center text-gray-500 hover:text-[#026181]"><i class="far fa-comment mr-1"></i> Comment</button>
-          <button class="flex items-center text-gray-500 hover:text-[#026181]"><i class="fas fa-link mr-1"></i> Link-Up</button>
-        </div>
-        <div class="flex space-x-2 mb-6 mt-6">
-          <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Well Done!</button>
-          <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Congratulations!</button>
-        </div>
-        <div class="separator-line"></div>
-        <div class="comment-section">
-          <input type="text" class="comment-input" placeholder="Write a comment...">
-          <button class="post-button">Post</button>
-        </div>
-        <div class="activity-post-comments" style="display: none;">
-          <div class="comment-input-container">
-            <input type="text" class="comment-input" placeholder="Write a comment..." aria-label="Write a comment">
-            <button class="comment-submit">Post</button>
-          </div>
-          <div class="comments-list"></div>
-        </div>
-        <div class="more-menu">
-          <div class="more-menu-content">
-            <div class="more-menu-item" data-action="go-to-post">Go to post</div>
-            <div class="more-menu-item" data-action="copy-link">Copy Link</div>
-            <div class="more-menu-item" data-action="about-account">About this Account</div>
-            <div class="more-menu-item" data-action="cancel">Cancel</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div> {% endcomment %}
-
-  
-  
-  {% comment %} <div class="recent-activity">
-    <div><h3>Recent Activity</h3></div>
-    <div class="activity-posts">
-
-
-      <div class="activity-post" data-post-id="{{ post.id }}" style="border:2px solid none">
+ <div class="recent-activity">
+  <div><h3>Recent Activity</h3></div>
+  <div class="activity-posts" id="activity-posts">
+    {% for post in posts %}
+      <div class="activity-post" data-post-id="{{ post.id }}" data-author-slug="{{ post.author.profile.slug }}" style="border:2px solid none">
         <div class="activity-post-left-section">
           <div class="activity-post-images carousel-container">
             <button class="carousel-btn prev" aria-label="Previous image">
@@ -337,159 +251,137 @@
             </button>
             <div class="carousel-track">
               {% for image in post.images.all %}
-                <img class="carousel-item" src="{{ image.image_url }}" alt="{{ image.alt_text|default:'Sustainable packaging prototype' }}" data-index="{{ forloop.counter0 }}">
+                {% if image.file and image.file.name %}
+                  {% with file_url=image.file.url|lower %}
+                    {% if file_url|slice:"-4:" == ".mp4" or file_url|slice:"-5:" == ".webm" %}
+                      <video class="carousel-item" controls autoplay muted loop playsinline>
+                        <source src="{{ image.file.url }}" type="{{ image.file.content_type|default:'video/mp4' }}">
+                        Your browser does not support the video tag.
+                      </video>
+                    {% else %}
+                      <img class="carousel-item" src="{{ image.file.url }}" alt="{{ image.alt_text|default:'Image' }}" data-index="{{ forloop.counter0 }}">
+                    {% endif %}
+                  {% endwith %}
+                {% else %}
+                  <div class="carousel-item">No media available (ID: {{ image.id }})</div>
+                {% endif %}
               {% endfor %}
             </div>
+
             <button class="carousel-btn next" aria-label="Next image">
               <i class="fas fa-chevron-right carousel-icon"></i>
             </button>
           </div>
         </div>
         <div class="activity-post-right-section" style="border:2px solid none">
+          <div class="post-more-menu">
+            <div class="more-menu-content">
+              <div class="more-menu-item" data-action="go-to-post">Go to post</div>
+              <div class="more-menu-item" data-action="copy-link">Copy Link</div>
+              <div class="more-menu-item" data-action="about-account">About this Account</div>
+              {% if request.user == post.author %}
+                <div class="more-menu-item" data-action="edit-post" style="color: #0066cc;">Edit Post</div>
+                <div class="more-menu-item" data-action="delete-post" style="color: #dc2626;">Delete Post</div>
+              {% endif %}
+              <div class="more-menu-item" data-action="cancel">Cancel</div>
+            </div>
+          </div>
           <div class="activity-post-header" style="border:2px solid none">
             <div class="activity-post-avatar">
-              {% if post.author.profile_image %}
-                <img src="{{ post.author.profile_image.url }}" alt="{{ post.author.username }}">
+              {% if post.author.profile.profile_picture %}
+                <img src="{{ post.author.profile.profile_picture.url }}" alt="{{ post.author.first_name }}">
+              {% else %}
+                <img src="{% static 'images/default-user.png' %}" alt="{{ post.author.first_name }}">
               {% endif %}
             </div>
-            <div class="activity-post-author">{{ post.author.username }}</div>
-            <div class="activity-post-time">{{ post.created_at|timesince }} ago</div>
+            <div class="activity-post-author">{{ post.author.first_name }}</div>
+            <div class="activity-post-time">{{ post.created_at|zero_timesince|safe }} ago</div>
             <div class="activity-post-more" aria-label="More options"></div>
           </div>
           <div class="activity-post-container" style="border:2px solid none">
             <div class="activity-post-content" style="border:2px solid none">
-              {{ post.content|safe }}
+              {{ post.caption|safe }}
+              {% if post.category %}
+              <span class="category">{{ post.category }}</span>
+              {% endif %}
               {% for hashtag in post.hashtags.all %}
-                <span class="hashtag">{{ hashtag.name }}</span>
+              {% if hashtag.name != post.category|lower %}
+                      <span class="hashtag">{{ hashtag.name }}</span>
+                  {% endif %}
               {% endfor %}
+          </div>
+            <div class="view-more-btn-container"></div>
+            <div class="flex space-x-2 mb-0 mt-4 mb-4">
+              <button class="preset-comment-btn px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm" data-post-id="{{ post.id }}" data-text="Well Done!">Well Done!</button>
+              <button class="preset-comment-btn px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm" data-post-id="{{ post.id }}" data-text="Congratulations">Congratulations!</button>
+              {% comment %} {% for reaction in post.reactions.all %}
+                <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">{{ reaction.text }}</button>
+              {% endfor %} {% endcomment %}
             </div>
             <div class="flex items-center justify-between border-t border-b border-gray-100 py-3 my-0 px-4">
-              <button class="flex items-center text-gray-500 hover:text-yellow-500"><i class="far fa-star mr-1 relative bottom-[2px]"></i> Star</button>
-              <button class="flex items-center text-gray-500 hover:text-[#026181]"><i class="far fa-comment mr-1"></i> Comment</button>
+              <button class="like-btn flex items-center text-gray-500 hover:text-yellow-500 {% if request.user in post.likes.all %}liked{% endif %}" data-post-id="{{ post.id }}">
+                <i class="fa-star mr-1 relative bottom-[2px] {% if request.user in post.likes.all %}fas{% else %}far{% endif %}"></i>
+                Star <span class="like-count ml-1">{% if post.likes.count > 0 %}{{ post.likes.count }}{% endif %}</span>
+              </button>
+              <button class="comment-btn flex items-center text-gray-500 hover:text-[#026181]" data-post-id="{{ post.id }}"><i class="far fa-comment mr-1"></i> Comment</button>
               <button class="flex items-center text-gray-500 hover:text-[#026181]"><i class="fas fa-link mr-1"></i> Link-Up</button>
             </div>
-            <div class="flex space-x-2 mb-6 mt-6">
-              {% for reaction in post.reactions.all %}
-                <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">{{ reaction.text }}</button>
-              {% endfor %}
-            </div>
-            <div class="separator-line"></div>
-            <div class="comment-section">
-              <input type="text" class="comment-input" placeholder="Write a comment...">
-              <button class="post-button">Post</button>
-            </div>
-            <div class="activity-post-comments" style="display: none;">
-              <div class="comment-input-container">
-                <input type="text" class="comment-input" placeholder="Write a comment..." aria-label="Write a comment">
-                <button class="comment-submit">Post</button>
-              </div>
-              <div class="comments-list">
+            <div class="activity-post-comments" id="comment-section-{{ post.id }}">
+              <button class="close-btn" id="close-btn-{{ post.id }}"><i class="fas fa-chevron-down"></i></button>
+              <div class="comments-list" id="comment-list-{{ post.id }}">
                 {% for comment in post.comments.all %}
-                  <div class="comment">{{ comment.author.username }}: {{ comment.text }}</div>
+                  <div class="flex mb-3 {% if comment.depth > 0 %}comment-reply{% endif %}" data-comment-id="{{ comment.id }}" data-comment-depth="{{ comment.depth }}">
+                    <div class="w-8 h-8 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+                      <img src="{% if comment.author.profile.profile_picture %}{{ comment.author.profile.profile_picture.url }}{% else %}/static/images/default-user.png{% endif %}" alt="{{ comment.author.first_name|default:comment.author.username }}" class="w-full h-full object-cover" loading="lazy">
+                    </div>
+                    <div class="ml-2">
+                      <div class="bg-gray-100 rounded-lg px-3 py-2">
+                        <p class="font-semibold text-sm">{{ comment.author.first_name|default:comment.author.username }}</p>
+                        <p class="text-sm">
+                          {% if comment.parent_comment %}
+                            <span class="text-blue-600 font-medium cursor-pointer hover:text-blue-800 hover:underline mention-link" data-slug="{{ comment.parent_comment.author.profile.slug }}">@{{ comment.parent_comment.author.first_name|default:comment.parent_comment.author.username }}</span>
+                          {% endif %}
+                          {{ comment.text }}
+                        </p>
+                      </div>
+                      <div class="flex items-center text-xs text-gray-500 mt-1 space-x-3">
+                        <span>{{ comment.created_at|zero_timesince|safe }} ago</span>
+                        <button class="like-comment flex items-center text-gray-500 hover:text-yellow-500 {% if request.user in comment.likes.all %}liked text-yellow-500{% endif %}" data-comment-id="{{ comment.id }}">
+                          <i class="fa-star mr-1 relative bottom-[2px] {% if request.user in comment.likes.all %}fas{% else %}far{% endif %}"></i>
+                          <span class="like-text">{% if request.user in comment.likes.all %}Unstar{% else %}Star{% endif %}</span>
+                          <span class="like-count ml-1">{% if comment.likes.count > 0 %}{{ comment.likes.count }}{% endif %}</span>
+                        </button>
+                        <button class="hover:text-gray-700 reply-btn" data-comment-id="{{ comment.id }}">Reply</button>
+                      </div>
+                    </div>
+                  </div>
                 {% endfor %}
               </div>
+              <div class="comment-input-container">
+                {% csrf_token %}
+                <input type="text" class="comment-input" id="comment-input-{{ post.id }}" placeholder="Write a comment..." aria-label="Write a comment">
+                <button type="button" class="comment-submit" id="comment-submit-{{ post.id }}">Post</button>
+              </div>
             </div>
-            <div class="more-menu">
+            {% comment %} <div class="post-more-menu">
               <div class="more-menu-content">
                 <div class="more-menu-item" data-action="go-to-post">Go to post</div>
                 <div class="more-menu-item" data-action="copy-link">Copy Link</div>
                 <div class="more-menu-item" data-action="about-account">About this Account</div>
                 <div class="more-menu-item" data-action="cancel">Cancel</div>
               </div>
-            </div>
+            </div> {% endcomment %}
           </div>
         </div>
       </div>
-      
-    </div>
-    <button class="view-more">View More</button>
-  </div> {% endcomment %}
-
-  <div class="recent-activity">
-    <div><h3>Recent Activity</h3></div>
-    <div class="activity-posts">
-      {% for post in posts %}
-        <div class="activity-post" data-post-id="{{ post.id }}" style="border:2px solid none">
-          <div class="activity-post-left-section">
-            <div class="activity-post-images carousel-container">
-              <button class="carousel-btn prev" aria-label="Previous image">
-                <i class="fas fa-chevron-left carousel-icon"></i>
-              </button>
-              <div class="carousel-track">
-                {% for image in post.images.all %}
-                  <img class="carousel-item" src="{{ image.image.url }}" alt="{{ image.alt_text|default:'Image' }}" data-index="{{ forloop.counter0 }}">
-                {% endfor %}
-              </div>
-              <button class="carousel-btn next" aria-label="Next image">
-                <i class="fas fa-chevron-right carousel-icon"></i>
-              </button>
-            </div>
-          </div>
-          <div class="activity-post-right-section" style="border:2px solid none">
-            <div class="activity-post-header" style="border:2px solid none">
-              <div class="activity-post-avatar">
-                {% if post.author.profile.profile_picture %}
-                  <img src="{{ post.author.profile.profile_picture.url }}" alt="{{ post.author.first_name }}">
-                {% else %}
-                  <i class="fas fa-user"></i>
-                {% endif %}
-              </div>
-              <div class="activity-post-author">{{ post.author.first_name }}</div>
-              <div class="activity-post-time">{{ post.created_at|timesince }} ago</div>
-              <div class="activity-post-more" aria-label="More options"></div>
-            </div>
-            <div class="activity-post-container" style="border:2px solid none">
-              <div class="activity-post-content" style="border:2px solid none">
-                {{ post.caption|safe }}
-                {% for hashtag in post.hashtags.all %}
-                  <span class="hashtag">{{ hashtag.name }}</span>
-                {% endfor %}
-              </div>
-              <div class="flex items-center justify-between border-t border-b border-gray-100 py-3 my-0 px-4">
-                <button class="flex items-center text-gray-500 hover:text-yellow-500"><i class="far fa-star mr-1 relative bottom-[2px]"></i> Star</button>
-                <button class="flex items-center text-gray-500 hover:text-[#026181]"><i class="far fa-comment mr-1"></i> Comment</button>
-                <button class="flex items-center text-gray-500 hover:text-[#026181]"><i class="fas fa-link mr-1"></i> Link-Up</button>
-              </div>
-              <div class="flex space-x-2 mb-0 mt-4">
-                <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Well Done!</button>
-                <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Congratulations!</button>
-                {% for reaction in post.reactions.all %}
-                  <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">{{ reaction.text }}</button>
-                {% endfor %}
-              </div>
-              <div class="separator-line"></div>
-              <div class="comment-section">
-                <input type="text" class="comment-input" placeholder="Write a comment...">
-                <button class="post-button">Post</button>
-              </div>
-              <div class="activity-post-comments" style="display: none;">
-                <div class="comment-input-container">
-                  <input type="text" class="comment-input" placeholder="Write a comment..." aria-label="Write a comment">
-                  <button class="comment-submit">Post</button>
-                </div>
-                <div class="comments-list">
-                  {% for comment in post.comments.all %}
-                    <div class="comment">{{ comment.author.username }}: {{ comment.text }}</div>
-                  {% endfor %}
-                </div>
-              </div>
-              <div class="more-menu">
-                <div class="more-menu-content">
-                  <div class="more-menu-item" data-action="go-to-post">Go to post</div>
-                  <div class="more-menu-item" data-action="copy-link">Copy Link</div>
-                  <div class="more-menu-item" data-action="about-account">About this Account</div>
-                  <div class="more-menu-item" data-action="cancel">Cancel</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      {% empty %}
-        <p>No recent activity.</p>
-      {% endfor %}
-    </div>
-    <button class="view-more">View More</button>
+    {% empty %}
+      <p>No recent activity.</p>
+    {% endfor %}
   </div>
+  {% if has_next %}
+    <button class="view-more" data-slug="{{ profile.slug }}" data-page="1">View More</button>
+  {% endif %}
+</div>
 
   <section class="footer-section">
     <div class="footer-bottom">
@@ -562,9 +454,35 @@
     <div id="lightbox-content"></div>
     <button id="lightbox-next" aria-label="Next">&#10095;</button>
   </div>
-   <script src="{% static 'profiles/js/profile.js' %}"></script>
+
+  <!-- Custom Confirmation Modal -->
+  <div id="customConfirmModal" class="custom-modal-overlay">
+    <div class="custom-modal-content">
+      <div class="custom-modal-header">
+        <i class="fas fa-exclamation-triangle text-red-500"></i>
+        <h3>Confirm Delete</h3>
+      </div>
+      <div class="custom-modal-body">
+        <p id="customConfirmMessage">Are you sure you want to delete this post? This action cannot be undone.</p>
+      </div>
+      <div class="custom-modal-footer">
+        <button id="customConfirmCancel" class="custom-btn-cancel">Cancel</button>
+        <button id="customConfirmDelete" class="custom-btn-delete">
+          <i class="fas fa-trash-alt"></i>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+    <script>
+        window.currentUserProfilePic = "{% if request.user.profile.profile_picture %}{{ request.user.profile.profile_picture.url }}{% else %}/static/images/default-user.png{% endif %}";
+    </script>
+   <script src="{% static 'profiles/js/profile.js' %}" defer></script>
 
    {% block modal_section %}{% endblock %}
+
 
     {% block extra_js %}
     {% endblock %}

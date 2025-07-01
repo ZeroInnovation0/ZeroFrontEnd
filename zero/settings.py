@@ -16,7 +16,6 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -28,9 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -44,6 +41,7 @@ INSTALLED_APPS = [
     'profiles',
     'activity',
     'accounts.apps.AccountsConfig',
+    # REMOVED 'sendfile' - causing the error
 ]
 
 MIDDLEWARE = [
@@ -76,23 +74,9 @@ TEMPLATES = [
     },
 ]
 
-
-
-
 WSGI_APPLICATION = 'zero.wsgi.application'
 
-
 # Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -104,10 +88,7 @@ DATABASES = {
     },
 }
 
-
 # Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -123,46 +104,34 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 STATIC_URL = '/static/'
-
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'), # ✅ this is correct
+    os.path.join(BASE_DIR, 'static'),
 ]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # Used by collectstatic in production
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media files (user-uploaded content)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # This will create a 'media' folder at your project root
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Google OAuth2 Configuration
 AUTHENTICATION_BACKENDS = [
-    'social_core.backends.google.GoogleOAuth2',  # Google authentication backend
-    'django.contrib.auth.backends.ModelBackend',  # Default Django authentication
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '512120055820-76mm71p57r5k1pe6bgivha8in3uqnine.apps.googleusercontent.com'  # Replace with your Client ID
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'  # Replace with your Client Secret
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '512120055820-76mm71p57r5k1pe6bgivha8in3uqnine.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     'https://www.googleapis.com/auth/userinfo.email',
@@ -170,46 +139,39 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
 ]
 
 SOCIAL_AUTH_ALWAYS_REDIRECT = True
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/home/'  # Redirect to home after login
-SOCIAL_AUTH_LOGIN_ERROR_URL = '/authentication/'  # Redirect on login failure
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/home/'
+SOCIAL_AUTH_LOGIN_ERROR_URL = '/authentication/'
 LOGIN_REDIRECT_URL = '/home/'
 LOGIN_URL = '/authentication/'
 
-# Use email as username (helps prevent duplicate username collisions)
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 
-# Pipeline configuration
-# settings.py
-
 SOCIAL_AUTH_PIPELINE = (
-    # Get the basic social profile details (uid, extra_data)
     'social_core.pipeline.social_auth.social_details',
     'social_core.pipeline.social_auth.social_uid',
     'social_core.pipeline.social_auth.auth_allowed',
-
-    # This step tries to load an existing user based on the social UID.
-    # It also sets up the 'strategy' object with the current backend.
     'social_core.pipeline.social_auth.social_user',
-
-    # At this point, 'strategy.backend' should be fully initialized.
-    # Now, attempt to find a user by email, which might be a pre-existing non-social account.
     'social_core.pipeline.social_auth.associate_by_email',
-
-    # --- Your custom pipeline function should come AFTER 'social_user' and 'associate_by_email' ---
-    # This is where 'strategy.backend.name' should now be reliably available.
     'accounts.pipeline.prevent_social_login_if_email_exists',
-
-    # Get a username, creating a new user if not already associated/found
     'social_core.pipeline.user.get_username',
-    'social_core.pipeline.user.create_user', # Creates a new user if 'user' is None so far
-
-    # --- Your custom pipeline function for saving user details ---
+    'social_core.pipeline.user.create_user',
     'accounts.pipeline.save_user_details',
-
-    # Associate the social account with the user (whether newly created or existing)
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
-    'social_core.pipeline.user.user_details', # Update user details with social data
+    'social_core.pipeline.user.user_details',
 )
 
 AUTH_USER_MODEL = 'accounts.User'
+
+# Video streaming optimizations for development
+import mimetypes
+mimetypes.add_type("video/mp4", ".mp4", True)
+mimetypes.add_type("video/webm", ".webm", True)
+
+# Better file handling for development
+DATA_UPLOAD_MAX_MEMORY_SIZE = 200 * 1024 * 1024  # 200MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 200 * 1024 * 1024  # 200MB
+
+# Enable range requests for video seeking
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True

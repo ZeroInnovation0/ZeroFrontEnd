@@ -8,7 +8,9 @@ from django.http import HttpResponseForbidden, HttpResponse
 from django.views.decorators.http import require_POST
 from .forms import FactForm
 import os, re
-from activity.models import Post
+from activity.models import Post, PostImage
+from django.db.models import Prefetch
+from django.core.paginator import Paginator
 
 
 @login_required
@@ -22,7 +24,6 @@ def profile_detail(request, slug):
 
     # Select the template based on the user_type
     user_type = profile.user.user_type
-
     if user_type == 'investor':
         template_name = 'profiles/investor_profile.html'
     elif user_type == 'entrepreneur':
@@ -32,15 +33,31 @@ def profile_detail(request, slug):
     else:
         template_name = 'profiles/base_profile.html'  # Fallback
 
-        
-    # Fetch posts for the profile's user, ordered by creation date (newest first)
-    posts = Post.objects.filter(author=profile.user).order_by('-created_at')
+    # Fetch posts with images ordered by 'order' field
+    # posts = Post.objects.filter(author=profile.user).prefetch_related(
+    #     Prefetch('images', queryset=PostImage.objects.all().order_by('order'))
+    # ).order_by('-created_at')
+
+    # Fetch initial 4 posts
+    posts = Post.objects.filter(author=profile.user).select_related('author__profile').prefetch_related('images').order_by('-created_at')
+    paginator = Paginator(posts, 4)  # Initial 4 posts
+    page_obj = paginator.page(1)
+    posts = page_obj.object_list
+    has_next = page_obj.has_next()
+
+    profile_picture_url = (
+        profile.profile_picture.url
+        if profile.profile_picture
+        else '/static/images/default-user.png'
+    )
 
     context = {
         'profile': profile,
         'is_owner': is_owner,
         'form': FactForm(),
-        'posts': posts,  # Add posts to the context
+        'posts': posts,
+        'has_next': has_next,
+        'profile_picture_url': profile_picture_url,
     }
 
     return render(request, template_name, context)

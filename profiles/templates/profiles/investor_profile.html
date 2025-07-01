@@ -25,7 +25,7 @@
       {% if profile.profile_picture %}
         <img src="{{ profile.profile_picture.url }}" alt="{{ profile.user.first_name }}" class="card-image">
       {% else %}
-        <img src="{% static 'profiles/Images/brian.avif' %}" alt="{{ profile.user.first_name }}" class="card-image">
+        <img src="{% static 'images/default-user.png' %}" alt="{{ profile.user.first_name }}" class="card-image">
       {% endif %}
       <h2 class="card-name">{{ profile.user.get_full_name }}</h2>
       <p class="card-role"><span class="role-highlight">{{ profile.user.user_type|capfirst }}</span> | {{ profile.position }}</p>
@@ -42,7 +42,7 @@
     {% if profile.profile_picture %}
       <img src="{{ profile.profile_picture.url }}" alt="{{ profile.user.first_name }}" class="profile-pic">
     {% else %}
-      <img src="{% static 'profiles/Images/brian.avif' %}" alt="{{ profile.user.first_name }}" class="profile-pic">
+      <img src="{% static 'images/default-user.png' %}" alt="{{ profile.user.first_name }}" class="profile-pic">
     {% endif %}
     {% if is_owner %}
       <form id="uploadForm" method="POST" enctype="multipart/form-data" action="{% url 'profiles:update_picture' profile.slug %}" style="display: none;">
